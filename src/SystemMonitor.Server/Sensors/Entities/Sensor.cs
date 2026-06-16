@@ -6,9 +6,9 @@ public sealed class Sensor
 {
     public string Id { get; set; } = default!;
 
-    public required string HostName { get; set; }
-
     public required string IpAddress { get; set; }
+
+    public required int Port { get; set; }
 
     public required int MeasurementPeriodMilliseconds { get; set; }
 

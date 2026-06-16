@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SystemMonitor.Server.Measurements.Services;
+using SystemMonitor.Shared.Measurements.Dtos;
 
 namespace SystemMonitor.Server.Measurements.Controllers;
 
@@ -18,7 +19,7 @@ public sealed class MeasurementsController(MeasurementService measurementService
         [FromQuery] int pageSize = 50)
     {
         var measurementQueryResult = await measurementService.QueryAsync(sensorId, from, to, page, pageSize).ConfigureAwait(false);
-        var measurementQueryResponse = new MeasurementQueryResponse
+        var measurements = new MeasurementsPaginatedDto
         {
             PageNumber = page,
             PageSize = pageSize,
@@ -26,6 +27,6 @@ public sealed class MeasurementsController(MeasurementService measurementService
             Measurements = measurementQueryResult.Measurements,
         };
 
-        return Ok(measurementQueryResponse);
+        return Ok(measurements);
     }
 }

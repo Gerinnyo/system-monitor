@@ -1,16 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using SystemMonitor.Server.Measurements.Entities;
 using SystemMonitor.Server.Persistence;
-using SystemMonitor.Shared.Measurements;
+using SystemMonitor.Shared.Measurements.Dtos;
 
 namespace SystemMonitor.Server.Measurements.Services;
 
 public sealed class MeasurementService(ApplicationDatabaseContext dbContext)
 {
-    public async Task StoreAsync(MeasurementCompletedEvent measurementCompletedEvent, CancellationToken cancellationToken)
+    public async Task StoreAsync(Measurement measurement, CancellationToken cancellationToken)
     {
         var sensorExists = await dbContext.Sensors
-            .Where(x => x.Id == measurementCompletedEvent.SensorId)
+            .Where(x => x.Id == measurement.SensorId)
             .AnyAsync(cancellationToken)
             .ConfigureAwait(false);
 
@@ -18,15 +18,6 @@ public sealed class MeasurementService(ApplicationDatabaseContext dbContext)
         {
             return;
         }
-
-        var measurement = new Measurement
-        {
-            SensorId = measurementCompletedEvent.SensorId,
-            Timestamp = measurementCompletedEvent.Timestamp,
-            MetricType = Enum.TryParse(measurementCompletedEvent.MetricType, out MetricType metricType) ? metricType : MetricType.Unknown,
-            Value = measurementCompletedEvent.Value,
-            Unit = measurementCompletedEvent.Unit,
-        };
 
         dbContext.Measurements.Add(measurement);
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -55,6 +46,15 @@ public sealed class MeasurementService(ApplicationDatabaseContext dbContext)
         var measurements = await measurementsQueryBuilder.OrderByDescending(x => x.Timestamp)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(x => new MeasurementDto
+            {
+                Id = x.Id,
+                SensorId = x.SensorId,
+                Timestamp = x.Timestamp,
+                MetricType = x.MetricType.ToString(),
+                Value = x.Value,
+                Unit = x.Unit,
+            })
             .ToListAsync();
 
         return new MeasurementQueryResult

@@ -31,10 +31,10 @@ public static class DependencyInjection
     {
         services.AddScoped<SensorService>();
         services.AddScoped<MeasurementService>();
-        services.AddSingleton<ConnectionService>();
+        services.AddSingleton<SensorConnectionService>();
         services.AddScoped<SensorConnectionHandler>();
         services.AddScoped<Messenger>();
-        services.AddHostedService(sp => sp.GetRequiredService<ConnectionService>());
+        services.AddHostedService(sp => sp.GetRequiredService<SensorConnectionService>());
 
         return services;
     }

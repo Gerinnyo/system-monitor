@@ -16,7 +16,7 @@ public sealed class ApplicationDatabaseContext(DbContextOptions<ApplicationDatab
     {
         base.OnModelCreating(builder);
 
-        builder.Entity<Sensor>().HasIndex(x => new { x.IpAddress, x.HostName, });
+        builder.Entity<Sensor>().HasIndex(x => new { x.IpAddress, x.Port, });
         builder.Entity<Measurement>().HasIndex(x => new { x.SensorId, x.Timestamp });
     }
 }

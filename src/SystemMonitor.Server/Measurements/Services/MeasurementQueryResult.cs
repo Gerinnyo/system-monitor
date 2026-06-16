@@ -1,4 +1,4 @@
-﻿using SystemMonitor.Server.Measurements.Entities;
+﻿using SystemMonitor.Shared.Measurements.Dtos;
 
 namespace SystemMonitor.Server.Measurements.Services;
 
@@ -6,5 +6,5 @@ public sealed record MeasurementQueryResult
 {
     public required int Total { get; init; }
 
-    public required List<Measurement> Measurements { get; init; } = default!;
+    public required List<MeasurementDto> Measurements { get; init; } = default!;
 }

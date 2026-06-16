@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -78,24 +77,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Auto-migrate and optionally seed on startup
-await using (var scope = app.Services.CreateAsyncScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDatabaseContext>();
-    await db.Database.MigrateAsync();
-
-    if (args.Contains("--seed"))
-    {
-        var um = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
-        if (await um.FindByNameAsync("admin") is null)
-        {
-            var admin = new IdentityUser { UserName = "admin", };
-            await um.CreateAsync(admin, "Admin123!");
-            Log.Information("Seeded default admin user (admin / Admin123!)");
-        }
-    }
-}
-
+app.UsePersistence();
 app.UseSerilogRequestLogging();
 app.UseSwagger();
 app.UseSwaggerUI();

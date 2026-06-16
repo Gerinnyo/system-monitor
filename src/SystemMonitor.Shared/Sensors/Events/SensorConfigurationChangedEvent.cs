@@ -1,4 +1,4 @@
-﻿namespace SystemMonitor.Shared.Sensors;
+﻿namespace SystemMonitor.Shared.Sensors.Events;
 
 public sealed record SensorConfigurationChangedEvent
 {

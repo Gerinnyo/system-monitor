@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SystemMonitor.Server.Sensors.Requests;
 using SystemMonitor.Server.Sensors.Services;
+using SystemMonitor.Shared.Sensors.Dtos;
 
 namespace SystemMonitor.Server.Sensors.Controllers;
 
@@ -25,9 +25,9 @@ public class SensorsController(SensorService sensorService, CancellationToken ca
     }
 
     [HttpPut("{id:string}")]
-    public async Task<IActionResult> UpdateConfigurationAsync(string id, [FromBody] UpdateSensorConfigurationRequest updateSensorConfigurationRequest)
+    public async Task<IActionResult> UpdateConfigurationAsync(string id, [FromBody] UpdateSensorConfigurationDto updateSensorConfiguration)
     {
-        await sensorService.UpdateConfigurationAsync(id, updateSensorConfigurationRequest, cancellationToken).ConfigureAwait(false);
+        await sensorService.UpdateConfigurationAsync(id, updateSensorConfiguration, cancellationToken).ConfigureAwait(false);
         return Ok();
     }
 }

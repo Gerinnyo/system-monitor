@@ -1,20 +1,21 @@
 using System.Net.Sockets;
 using System.Text.Json;
+using SystemMonitor.Server.Measurements.Entities;
 using SystemMonitor.Server.Measurements.Services;
-using SystemMonitor.Server.Sensors.Requests;
-using SystemMonitor.Shared.Measurements;
+using SystemMonitor.Shared.Measurements.Events;
 using SystemMonitor.Shared.Notifications;
-using SystemMonitor.Shared.Sensors;
+using SystemMonitor.Shared.Sensors.Events;
 
 namespace SystemMonitor.Server.Sensors.Services;
 
 public class SensorConnectionHandler(Messenger messenger, IServiceScopeFactory serviceScopeFactory, ILogger<SensorConnectionHandler> logger)
 {
-    public string SensorId { get; private set; } = string.Empty;
+    private SensorConnectionContext connectionContext = default!;
 
-    public async Task HandleConnectionAsync(TcpClient client, CancellationToken cancellationToken)
+    public async Task HandleConnectionAsync(SensorConnectionContext connectionContext, CancellationToken cancellationToken)
     {
-        var stream = client.GetStream();
+        this.connectionContext = connectionContext;
+        var stream = connectionContext.Client.GetStream();
 
         try
         {
@@ -26,26 +27,32 @@ public class SensorConnectionHandler(Messenger messenger, IServiceScopeFactory s
                     break;
                 }
 
-                await HandleEventAsync(client, eventEnvelope, cancellationToken).ConfigureAwait(false);
+                await HandleMeasurementCompletedAsync(eventEnvelope, cancellationToken).ConfigureAwait(false);
             }
         }
-        // TODO Handle if sensor id is not initialized yet
         catch (Exception exception) when (exception is IOException or SocketException)
         {
-            logger.LogInformation("Sensor {SensorId} disconnected", SensorId);
+            logger.LogInformation("Sensor {SensorId} disconnected", connectionContext.Sensor.Id);
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Error handling sensor {SensorId}", SensorId);
+            logger.LogError(exception, "Error handling sensor {SensorId}", connectionContext.Sensor.Id);
         }
 
         await DisconnectAsync(cancellationToken);
-        client.Close();
+        connectionContext.Client.Close();
     }
 
-    public async Task NotifyConfigurationChangedAsync(TcpClient client, SensorConfigurationChangedEvent sensorConfigurationChangedEvent, CancellationToken cancellationToken)
+    public async Task NotifyConfigurationChangedAsync(int measurementPeriodMilliseconds, CancellationToken cancellationToken)
     {
-        var stream = client.GetStream();
+        var stream = connectionContext.Client.GetStream();
+
+        var sensorConfigurationChangedEvent = new SensorConfigurationChangedEvent
+        {
+            Id = connectionContext.Sensor.Id,
+            MeasurementPeriodMilliseconds = measurementPeriodMilliseconds,
+        };
+
         var eventEnvelope = new EventEnvelope
         {
             EventType = SensorConfigurationChangedEvent.Type,
@@ -55,47 +62,26 @@ public class SensorConnectionHandler(Messenger messenger, IServiceScopeFactory s
         await messenger.SendAsync(stream, eventEnvelope, cancellationToken);
     }
 
-    private async Task HandleEventAsync(TcpClient client, EventEnvelope eventEnvelope, CancellationToken cancellationToken)
+    private async Task HandleMeasurementCompletedAsync(EventEnvelope eventEnvelope, CancellationToken cancellationToken)
     {
-        switch (eventEnvelope.EventType)
+        if (eventEnvelope.EventType != MeasurementCompletedEvent.Type)
         {
-            case SensorConfigurationChangedEvent.Type:
-                var sensorStartedEvent = JsonSerializer.Deserialize<SensorStartedEvent>(eventEnvelope.Payload)!;
-                await HandleSensorStartedAsync(client, sensorStartedEvent, cancellationToken).ConfigureAwait(false);
-
-                break;
-
-            case SensorStartedEvent.Type:
-                var measurementCompletedEvent = JsonSerializer.Deserialize<MeasurementCompletedEvent>(eventEnvelope.Payload)!;
-                await HandleMeasurementCompletedAsync(measurementCompletedEvent, cancellationToken).ConfigureAwait(false);
-
-                break;
+            return;
         }
-    }
 
-    private async Task HandleSensorStartedAsync(TcpClient client, SensorStartedEvent sensorStartedEvent, CancellationToken cancellationToken)
-    {
-        SensorId = sensorStartedEvent.SensorId;
-        var ipAddress = (client.Client.RemoteEndPoint as System.Net.IPEndPoint)!.Address.ToString();
-
-        using var scope = serviceScopeFactory.CreateScope();
-        var sensorService = scope.ServiceProvider.GetRequiredService<SensorService>();
-
-        var joinSensorRequest = new JoinSensorRequest
+        var measurementCompletedEvent = JsonSerializer.Deserialize<MeasurementCompletedEvent>(eventEnvelope.Payload)!;
+        var measurement = new Measurement
         {
-            HostName = sensorStartedEvent.Hostname,
-            IpAddress = ipAddress,
+            SensorId = measurementCompletedEvent.SensorId,
+            Timestamp = measurementCompletedEvent.Timestamp,
+            MetricType = Enum.TryParse(measurementCompletedEvent.MetricType, out MetricType metricType) ? metricType : MetricType.Unknown,
+            Value = measurementCompletedEvent.Value,
+            Unit = measurementCompletedEvent.Unit,
         };
-        await sensorService.JoinAsync(joinSensorRequest, cancellationToken).ConfigureAwait(false);
-        logger.LogInformation("Sensor joined: {SensorId} ({Hostname})", sensorStartedEvent.SensorId, sensorStartedEvent.Hostname);
-    }
 
-    private async Task HandleMeasurementCompletedAsync(MeasurementCompletedEvent measurementCompletedEvent, CancellationToken cancellationToken)
-    {
         using var scope = serviceScopeFactory.CreateScope();
         var measurementService = scope.ServiceProvider.GetRequiredService<MeasurementService>();
-
-        await measurementService.StoreAsync(measurementCompletedEvent, cancellationToken).ConfigureAwait(false);
+        await measurementService.StoreAsync(measurement, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task DisconnectAsync(CancellationToken cancellationToken)
@@ -103,6 +89,6 @@ public class SensorConnectionHandler(Messenger messenger, IServiceScopeFactory s
         using var scope = serviceScopeFactory.CreateScope();
         var sensorService = scope.ServiceProvider.GetRequiredService<SensorService>();
 
-        await sensorService.DisonnectAsync(SensorId, cancellationToken).ConfigureAwait(false);
+        await sensorService.DisonnectAsync(connectionContext.Sensor.Id, cancellationToken).ConfigureAwait(false);
     }
 }

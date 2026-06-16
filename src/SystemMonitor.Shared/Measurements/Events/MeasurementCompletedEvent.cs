@@ -1,4 +1,4 @@
-namespace SystemMonitor.Shared.Measurements;
+namespace SystemMonitor.Shared.Measurements.Events;
 
 public sealed record MeasurementCompletedEvent
 {
