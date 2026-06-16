@@ -23,13 +23,13 @@ public sealed class MeasurementService(ApplicationDatabaseContext dbContext)
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<MeasurementQueryResult> QueryAsync(int? sensorId, DateTime? from, DateTime? to, int page, int pageSize)
+    public async Task<MeasurementQueryResult> QueryAsync(Guid? sensorId, DateTime? from, DateTime? to, int page, int pageSize, CancellationToken cancellationToken)
     {
         var measurementsQueryBuilder = dbContext.Measurements.Include(x => x.Sensor).AsQueryable();
 
         if (sensorId is not null)
         {
-            measurementsQueryBuilder = measurementsQueryBuilder.Where(x => x.Id == sensorId);
+            measurementsQueryBuilder = measurementsQueryBuilder.Where(x => x.SensorId == sensorId);
         }
 
         if (from.HasValue)
@@ -42,20 +42,20 @@ public sealed class MeasurementService(ApplicationDatabaseContext dbContext)
             measurementsQueryBuilder = measurementsQueryBuilder.Where(x => x.Timestamp < to);
         }
 
-        var total = await measurementsQueryBuilder.CountAsync();
+        var total = await measurementsQueryBuilder.CountAsync(cancellationToken);
         var measurements = await measurementsQueryBuilder.OrderByDescending(x => x.Timestamp)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(x => new MeasurementDto
             {
                 Id = x.Id,
-                SensorId = x.SensorId,
+                SensorId = x.SensorId.ToString(),
                 Timestamp = x.Timestamp,
                 MetricType = x.MetricType.ToString(),
                 Value = x.Value,
                 Unit = x.Unit,
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         return new MeasurementQueryResult
         {

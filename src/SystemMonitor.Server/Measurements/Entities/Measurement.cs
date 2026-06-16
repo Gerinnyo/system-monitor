@@ -6,7 +6,7 @@ public sealed class Measurement
 {
     public int Id { get; set; }
 
-    public required string SensorId { get; set; }
+    public required Guid SensorId { get; set; }
 
     public Sensor Sensor { get; set; } = default!;
 

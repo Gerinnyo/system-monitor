@@ -4,7 +4,7 @@ namespace SystemMonitor.Server.Sensors.Entities;
 
 public sealed class Sensor
 {
-    public string Id { get; set; } = default!;
+    public Guid Id { get; set; } = default!;
 
     public required string IpAddress { get; set; }
 

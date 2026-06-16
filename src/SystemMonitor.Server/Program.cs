@@ -11,14 +11,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.RegisterLogger();
 builder.Services.AddPersistence(builder.Configuration);
-builder.Services.AddApplicationServices();
+builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddControllers();
 
 // ASP.NET Core Identity
 builder.Services.AddIdentityCore<IdentityUser>(o =>
 {
+    o.Password.RequiredLength = 5;
     o.Password.RequireDigit = false;
-    o.Password.RequiredLength = 6;
     o.Password.RequireNonAlphanumeric = false;
+    o.Password.RequireUppercase = false;
+    o.Password.RequireLowercase = false;
     o.Password.RequireUppercase = false;
 })
 .AddEntityFrameworkStores<ApplicationDatabaseContext>();

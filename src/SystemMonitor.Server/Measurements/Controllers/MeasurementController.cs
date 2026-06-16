@@ -12,13 +12,14 @@ public sealed class MeasurementsController(MeasurementService measurementService
 {
     [HttpGet]
     public async Task<IActionResult> Query(
-        [FromQuery] int? sensorId,
+        [FromQuery] Guid? sensorId,
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 50)
+        [FromQuery] int pageSize = 50, 
+        CancellationToken cancellationToken = default)
     {
-        var measurementQueryResult = await measurementService.QueryAsync(sensorId, from, to, page, pageSize).ConfigureAwait(false);
+        var measurementQueryResult = await measurementService.QueryAsync(sensorId, from, to, page, pageSize, cancellationToken).ConfigureAwait(false);
         var measurements = new MeasurementsPaginatedDto
         {
             PageNumber = page,

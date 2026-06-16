@@ -26,7 +26,7 @@ public static class StartupExtensions
         const string AdminUserName = "admin";
         const string AdminPassword = "admin";
 
-        bool adminExists = userManager.FindByNameAsync("admin").GetAwaiter().GetResult() is not null;
+        bool adminExists = userManager.FindByNameAsync(AdminUserName).GetAwaiter().GetResult() is not null;
         if (adminExists)
         {
             return;

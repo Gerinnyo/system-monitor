@@ -49,7 +49,7 @@ public class SensorConnectionHandler(Messenger messenger, IServiceScopeFactory s
 
         var sensorConfigurationChangedEvent = new SensorConfigurationChangedEvent
         {
-            Id = connectionContext.Sensor.Id,
+            Id = connectionContext.Sensor.Id.ToString(),
             MeasurementPeriodMilliseconds = measurementPeriodMilliseconds,
         };
 
@@ -72,7 +72,7 @@ public class SensorConnectionHandler(Messenger messenger, IServiceScopeFactory s
         var measurementCompletedEvent = JsonSerializer.Deserialize<MeasurementCompletedEvent>(eventEnvelope.Payload)!;
         var measurement = new Measurement
         {
-            SensorId = measurementCompletedEvent.SensorId,
+            SensorId = Guid.Parse(measurementCompletedEvent.SensorId),
             Timestamp = measurementCompletedEvent.Timestamp,
             MetricType = Enum.TryParse(measurementCompletedEvent.MetricType, out MetricType metricType) ? metricType : MetricType.Unknown,
             Value = measurementCompletedEvent.Value,

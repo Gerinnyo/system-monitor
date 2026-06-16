@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using SystemMonitor.Server.Configurations;
 using SystemMonitor.Server.Measurements.Services;
 using SystemMonitor.Server.Persistence;
 using SystemMonitor.Server.Sensors.Services;
@@ -27,7 +28,7 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<SensorService>();
         services.AddScoped<MeasurementService>();
@@ -35,6 +36,8 @@ public static class DependencyInjection
         services.AddScoped<SensorConnectionHandler>();
         services.AddScoped<Messenger>();
         services.AddHostedService(sp => sp.GetRequiredService<SensorConnectionService>());
+
+        services.Configure<TcpConfiguration>(configuration.GetSection(nameof(TcpConfiguration)));
 
         return services;
     }

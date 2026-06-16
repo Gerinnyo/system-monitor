@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using SystemMonitor.Server.Configurations;
@@ -5,18 +6,18 @@ using SystemMonitor.Server.Configurations;
 namespace SystemMonitor.Server.Sensors.Services;
 
 public class SensorConnectionService(
-    TcpConfiguration tcpConfiguration,
+    IOptions<TcpConfiguration> tcpConfiguration,
     IServiceScopeFactory scopeFactory,
     ILogger<SensorConnectionService> logger) : BackgroundService
 {
-    private readonly ConcurrentDictionary<string, SensorConnectionHandler> _connectionHandlers = [];
+    private readonly ConcurrentDictionary<Guid, SensorConnectionHandler> _connectionHandlers = [];
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        var listener = new TcpListener(tcpConfiguration.IPAddress, tcpConfiguration.Port);
+        var listener = new TcpListener(tcpConfiguration.Value.IPAddress, tcpConfiguration.Value.Port);
         listener.Start();
 
-        logger.LogInformation("TCP listener started on port {Port}", tcpConfiguration.Port);
+        logger.LogInformation("TCP listener started on port {Port}", tcpConfiguration.Value.Port);
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -72,7 +73,7 @@ public class SensorConnectionService(
         client.Dispose();
     }
 
-    public async Task NotifyConfigurationChangedAsync(string id, int measurementPeriodMilliseconds, CancellationToken cancellationToken)
+    public async Task NotifyConfigurationChangedAsync(Guid id, int measurementPeriodMilliseconds, CancellationToken cancellationToken)
     {
         if (!_connectionHandlers.TryGetValue(id, out var connectionHandler))
         {
