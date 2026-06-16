@@ -1,6 +1,0 @@
-@MonitoringAgent.Server_HostAddress = http://localhost:5059
-
-GET {{MonitoringAgent.Server_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

@@ -1,11 +1,7 @@
-﻿namespace SystemMonitor.Shared.Measurements.Dtos;
+﻿namespace SystemMonitor.Sensor.Measurements.Collectors;
 
-public sealed record MeasurementDto
+public sealed record Measurement
 {
-    public required int Id { get; init; }
-
-    public required int SensorId { get; init; }
-
     public required DateTime Timestamp { get; init; }
 
     public required string MetricType { get; init; }
