@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SystemMonitor.Server/SystemMonitor.Server.csproj" />
+    <Project Path="src/SystemMonitor.Shared/SystemMonitor.Shared.csproj" />
+  </Folder>
+</Solution>
