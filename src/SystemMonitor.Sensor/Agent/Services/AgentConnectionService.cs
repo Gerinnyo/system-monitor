@@ -30,7 +30,7 @@ public sealed class AgentConnectionService(
             }
             catch (Exception exception)
             {
-                logger.LogError(exception, "Connection with the agent {Host}:{Port} could not be established", agentConfiguration.Value.Host, agentConfiguration.Value.Port);
+                logger.LogError(exception, "An error occurec with the connection of agent {Host}:{Port}", agentConfiguration.Value.Host, agentConfiguration.Value.Port);
             }
 
             var stream = client.GetStream();

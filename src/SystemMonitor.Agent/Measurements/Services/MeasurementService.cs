@@ -42,7 +42,7 @@ public sealed class MeasurementService(ApplicationDatabaseContext dbContext)
             measurementsQueryBuilder = measurementsQueryBuilder.Where(x => x.Timestamp < to);
         }
 
-        var total = await measurementsQueryBuilder.CountAsync(cancellationToken);
+        var total = await measurementsQueryBuilder.CountAsync(cancellationToken).ConfigureAwait(false);
         var measurements = await measurementsQueryBuilder.OrderByDescending(x => x.Timestamp)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -55,7 +55,7 @@ public sealed class MeasurementService(ApplicationDatabaseContext dbContext)
                 Value = x.Value,
                 Unit = x.Unit,
             })
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         return new MeasurementQueryResult
         {

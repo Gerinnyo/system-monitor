@@ -14,7 +14,7 @@ public sealed class SensorService(ApplicationDatabaseContext dbContext, SensorCo
     public Task<List<SensorDto>> GetAllAsync(CancellationToken cancellationToken)
     {
         return dbContext.Sensors
-            .OrderBy(x => x.ConnectionState)
+            .OrderByDescending(x => x.ConnectionState)
             .ThenBy(x => x.Port)
             .Select(x => new SensorDto
             {
@@ -104,6 +104,11 @@ public sealed class SensorService(ApplicationDatabaseContext dbContext, SensorCo
             .ExecuteUpdateAsync(x => x.SetProperty(y => y.ConnectionState, ConnectionState.Disconnected), cancellationToken);
     }
 
+    public Task DisconnectAllAsync(CancellationToken cancellationToken)
+    {
+        return dbContext.Sensors.ExecuteUpdateAsync(x => x.SetProperty(y => y.ConnectionState, ConnectionState.Disconnected), cancellationToken);
+    }
+
     public async Task<bool> TryUpdateConfigurationAsync(int id, UpdateSensorConfigurationDto updateSensorConfigurationRequest, CancellationToken cancellationToken)
     {
         var sensor = await dbContext.Sensors
@@ -123,8 +128,8 @@ public sealed class SensorService(ApplicationDatabaseContext dbContext, SensorCo
 
         // TODO process in transaction
         sensor.MeasurementPeriodMilliseconds = updateSensorConfigurationRequest.MeasurementPeriodMilliseconds;
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await notificationService.NotifyConfigurationChangedAsync(id, updateSensorConfigurationRequest.MeasurementPeriodMilliseconds, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await notificationService.NotifyConfigurationChangedAsync(id, updateSensorConfigurationRequest.MeasurementPeriodMilliseconds, cancellationToken).ConfigureAwait(false);
 
         return true;
     }

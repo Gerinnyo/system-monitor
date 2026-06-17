@@ -25,7 +25,7 @@ public sealed class SensorConnectionHandler(Messenger messenger, IServiceScopeFa
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var eventEnvelope = await messenger.ReceiveAsync(stream, cancellationToken);
+                var eventEnvelope = await messenger.ReceiveAsync(stream, cancellationToken).ConfigureAwait(false);
                 if (eventEnvelope is null)
                 {
                     break;
@@ -43,7 +43,7 @@ public sealed class SensorConnectionHandler(Messenger messenger, IServiceScopeFa
             logger.LogError(exception, "Error handling sensor {SensorId}", connectionContext.Sensor.Id);
         }
 
-        await DisconnectAsync(cancellationToken);
+        await DisconnectAsync(cancellationToken).ConfigureAwait(false);
         connectionContext.Client.Close();
         stream.Dispose();
         connectionContext.Client.Dispose();

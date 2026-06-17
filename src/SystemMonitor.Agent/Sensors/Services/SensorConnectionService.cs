@@ -14,6 +14,8 @@ public sealed class SensorConnectionService(
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await ResetStatesAsync(cancellationToken).ConfigureAwait(false);
+
         var listener = new TcpListener(tcpConfiguration.Value.IPAddress, tcpConfiguration.Value.Port);
         listener.Start();
 
@@ -35,6 +37,13 @@ public sealed class SensorConnectionService(
 
         listener.Stop();
         listener.Dispose();
+    }
+
+    private async Task ResetStatesAsync(CancellationToken cancellationToken)
+    {
+        using var scope = scopeFactory.CreateScope();
+        var sensorService = scope.ServiceProvider.GetRequiredService<SensorService>();
+        await sensorService.DisconnectAllAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async void FireConnectionHandlerAsync(TcpClient client, CancellationToken cancellationToken)
@@ -83,7 +92,7 @@ public sealed class SensorConnectionService(
 
         try
         {
-            await connectionHandler.NotifyConfigurationChangedAsync(measurementPeriodMilliseconds, cancellationToken);
+            await connectionHandler.NotifyConfigurationChangedAsync(measurementPeriodMilliseconds, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception)
         {

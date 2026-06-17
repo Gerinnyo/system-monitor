@@ -11,7 +11,7 @@ using SystemMonitor.Agent.Persistence;
 namespace SystemMonitor.Agent.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDatabaseContext))]
-    [Migration("20260616200641_Initialization")]
+    [Migration("20260617123301_Initialization")]
     partial class Initialization
     {
         /// <inheritdoc />

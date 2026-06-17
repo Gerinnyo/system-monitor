@@ -53,7 +53,7 @@ public sealed class AgentConnectionHandler(
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var eventEnvelope = await messenger.ReceiveAsync(stream, cancellationToken);
+                var eventEnvelope = await messenger.ReceiveAsync(stream, cancellationToken).ConfigureAwait(false);
                 if (eventEnvelope is null)
                 {
                     break;
