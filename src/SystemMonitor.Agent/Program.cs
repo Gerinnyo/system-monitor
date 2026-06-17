@@ -5,6 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.RegisterLogger();
 builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddSignalR();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -26,6 +27,8 @@ app.UseSwaggerUI();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapIdentityEndpoints();
+app.MapSocketEndpoints();
 app.MapControllers();
 
 app.Run();

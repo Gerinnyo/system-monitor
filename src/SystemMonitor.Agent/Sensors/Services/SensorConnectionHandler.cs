@@ -83,6 +83,7 @@ public sealed class SensorConnectionHandler(Messenger messenger, IServiceScopeFa
         var stream = connectionContext.Client.GetStream();
         var sensorConfigurationChangedEvent = new SensorConfigurationChangedEvent
         {
+            SensorId = connectionContext.Sensor.Id,
             MeasurementPeriodMilliseconds = measurementPeriodMilliseconds,
         };
 

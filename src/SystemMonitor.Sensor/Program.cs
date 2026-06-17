@@ -21,5 +21,6 @@ builder.Services.AddSingleton<Messenger>();
 builder.Services.Configure<AgentConfiguration>(builder.Configuration.GetSection(nameof(AgentConfiguration)));
 builder.Services.Configure<BufferConfiguration>(builder.Configuration.GetSection(nameof(BufferConfiguration)));
 
+await Task.Delay(5000);
 var host = builder.Build();
 host.Run();

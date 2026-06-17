@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SystemMonitor.Agent.Persistence;
+using SystemMonitor.Agent.Sockets.Sensor;
+using SystemMonitor.Agent.Sockets.SensorsState;
 
 namespace SystemMonitor.Agent.Startup;
 
@@ -34,5 +36,19 @@ public static class StartupExtensions
 
         var admin = new IdentityUser { UserName = AdminUserName, };
         userManager.CreateAsync(admin, AdminPassword).GetAwaiter().GetResult();
+    }
+
+    public static WebApplication MapIdentityEndpoints(this WebApplication app)
+    {
+        //app.MapIdentityApi<IdentityUser>();
+        return app;
+    }
+
+    public static WebApplication MapSocketEndpoints(this WebApplication app)
+    {
+        app.MapSensorsStateSocket();
+        app.MapSensorSocket();
+
+        return app;
     }
 }

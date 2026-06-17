@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SystemMonitor.Agent.Measurements.Services;
 using SystemMonitor.Shared.Measurements.Dtos;
 
-namespace SystemMonitor.Agent.Measurements.Controllers;
+namespace SystemMonitor.Agent.Measurements.Endpoints;
 
 /// <summary>
 /// API controller for managing sensor measurements.

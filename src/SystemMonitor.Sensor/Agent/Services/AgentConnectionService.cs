@@ -56,13 +56,14 @@ public sealed class AgentConnectionService(
         }
 
         var sensorConfigurationChangedEvent = JsonSerializer.Deserialize<SensorConfigurationChangedEvent>(eventEnvelope.Payload)!;
+        sensorConfiguration.SensorId = sensorConfigurationChangedEvent.SensorId;
         sensorConfiguration.MeasurementPeriodMilliseconds = sensorConfigurationChangedEvent.MeasurementPeriodMilliseconds;
         logger.LogInformation("Configured sensor measurement period to {Period}ms", sensorConfiguration.MeasurementPeriodMilliseconds);
     }
 
     private async Task HandleAgentAsync(TcpClient client, CancellationToken cancellationToken)
     {
-        var scope = serviceScopeFactory.CreateScope();
+        using var scope = serviceScopeFactory.CreateScope();
         var agentConnectionHandler = scope.ServiceProvider.GetRequiredService<AgentConnectionHandler>();
         var agentConnectionContext = new AgentConnectionContext
         {

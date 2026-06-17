@@ -22,7 +22,7 @@ public sealed class AuthController(
     /// <response code="200">Successfully authenticated. Returns a JWT token.</response>
     /// <response code="401">Unauthorized - invalid username or password.</response>
     [HttpPost("login")]
-    [Consumes("application/json")]
+    [Consumes(typeof(LoginRequest), "application/json")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -45,8 +45,9 @@ public sealed class AuthController(
         }
 
         var token = jwtTokenProvider.CreateFor(user);
+        var response = new LoginResponse { Token = token, };
         logger.LogInformation("Login successful for {Username}", request.Username);
 
-        return Ok(token);
+        return Ok(response);
     }
 }

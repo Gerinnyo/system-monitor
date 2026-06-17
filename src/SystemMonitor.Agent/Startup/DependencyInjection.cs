@@ -12,6 +12,8 @@ using SystemMonitor.Agent.Configurations;
 using SystemMonitor.Agent.Measurements.Services;
 using SystemMonitor.Agent.Persistence;
 using SystemMonitor.Agent.Sensors.Services;
+using SystemMonitor.Agent.Sockets.Sensor;
+using SystemMonitor.Agent.Sockets.SensorsState;
 using SystemMonitor.Agent.Startup;
 using SystemMonitor.Shared.Notifications;
 
@@ -38,6 +40,8 @@ public static class DependencyInjection
         services.AddDbContext<ApplicationDatabaseContext>(x => x.UseSqlite(configuration.GetConnectionString(nameof(ApplicationDatabaseContext))));
 
         services.AddScoped<SensorService>();
+        services.AddScoped<SensorsStateSocket>();
+        services.AddScoped<SensorSocket>();
         services.AddScoped<MeasurementService>();
         services.AddScoped<SensorConnectionHandler>();
         services.AddScoped<Messenger>();
@@ -63,6 +67,7 @@ public static class DependencyInjection
             x.Password.RequireUppercase = false;
         })
         .AddEntityFrameworkStores<ApplicationDatabaseContext>();
+        //.AddApiEndpoints();
 
         return services;
     }
