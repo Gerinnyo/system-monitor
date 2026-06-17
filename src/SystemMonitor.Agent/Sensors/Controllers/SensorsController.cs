@@ -11,7 +11,7 @@ namespace SystemMonitor.Agent.Sensors.Controllers;
 [ApiController]
 [Route("[controller]")]
 [Authorize]
-public sealed class SensorsController(SensorService sensorService) : ControllerBase
+public sealed class SensorsController(SensorService sensorService, ILogger<SensorsController> logger) : ControllerBase
 {
     /// <summary>
     /// Retrieves all sensors.
@@ -27,6 +27,8 @@ public sealed class SensorsController(SensorService sensorService) : ControllerB
     public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
         var sensors = await sensorService.GetAllAsync(cancellationToken).ConfigureAwait(false);
+        logger.LogInformation("GetAllAsync returned {count} sensors", sensors?.Count ?? 0);
+
         return Ok(sensors);
     }
 
@@ -47,7 +49,14 @@ public sealed class SensorsController(SensorService sensorService) : ControllerB
     public async Task<IActionResult> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
         var sensor = await sensorService.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-        return sensor is not null ? Ok(sensor) : NotFound();
+        if (sensor is null)
+        {
+            logger.LogInformation("Sensor id={id} not found", id);
+            return NotFound();
+        }
+
+        logger.LogInformation("GetByIdAsync found sensor id={id}", id);
+        return Ok(sensor);
     }
 
     /// <summary>
@@ -69,6 +78,13 @@ public sealed class SensorsController(SensorService sensorService) : ControllerB
     public async Task<IActionResult> UpdateConfigurationAsync(int id, [FromBody] UpdateSensorConfigurationDto updateSensorConfiguration, CancellationToken cancellationToken)
     {
         bool updated = await sensorService.TryUpdateConfigurationAsync(id, updateSensorConfiguration, cancellationToken).ConfigureAwait(false);
-        return updated ? Ok() : BadRequest();
+        if (updated)
+        {
+            logger.LogInformation("Updated sensor id={id} configuration successfully", id);
+            return Ok();
+        }
+
+        logger.LogWarning("Failed to update sensor id={id} configuration", id);
+        return BadRequest();
     }
 }

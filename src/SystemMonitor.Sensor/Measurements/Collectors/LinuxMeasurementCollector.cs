@@ -1,31 +1,42 @@
 ﻿using System.Runtime.InteropServices;
+using SystemMonitor.Sensor.Configurations;
 
 namespace SystemMonitor.Sensor.Measurements.Collectors;
 
-public sealed class LinuxMeasurementCollector : IMeasurementCollector
+public sealed class LinuxMeasurementCollector(SensorConfiguration sensorConfiguration, ILogger<WindowsMeasurementCollector> logger) : IMeasurementCollector
 {
     public OSPlatform Platform { get; } = OSPlatform.Linux;
 
     public List<Measurement> Collect()
     {
-        DateTime timestamp = DateTime.UtcNow;
+        try
+        {
 
-        return [
-            new()
-            {
-                Timestamp = timestamp,
-                MetricType = "CPU",
-                Value = MeasureCpu(),
-                Unit = "%",
-            },
-             new()
-            {
-                Timestamp = timestamp,
-                MetricType = "Memory",
-                Value = MeasureMemory(),
-                Unit = "KBytes",
-            },
-        ];
+            DateTime timestamp = DateTime.UtcNow;
+
+            return [
+                new()
+                {
+                    Timestamp = timestamp,
+                    MetricType = "CPU",
+                    Value = MeasureCpu(),
+                    Unit = "%",
+                },
+                 new()
+                {
+                    Timestamp = timestamp,
+                    MetricType = "Memory",
+                    Value = MeasureMemory(),
+                    Unit = "KBytes",
+                },
+            ];
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Failed to collect measurement of sensor {SensorId}", sensorConfiguration.SensorId);
+        }
+
+        return [];
     }
 
     private static double MeasureCpu()

@@ -11,7 +11,7 @@ namespace SystemMonitor.Agent.Measurements.Controllers;
 [ApiController]
 [Route("[controller]")]
 [Authorize]
-public sealed class MeasurementsController(MeasurementService measurementService) : ControllerBase
+public sealed class MeasurementsController(MeasurementService measurementService, ILogger<MeasurementsController> logger) : ControllerBase
 {
     /// <summary>
     /// Retrieves a paginated list of measurements based on filter criteria.
@@ -46,6 +46,7 @@ public sealed class MeasurementsController(MeasurementService measurementService
             Measurements = measurementQueryResult.Measurements,
         };
 
+        logger.LogInformation("Query returned {count} measurements (total={total}) for page {page}", measurements.Measurements?.Count ?? 0, measurements.Total, page);
         return Ok(measurements);
     }
 }

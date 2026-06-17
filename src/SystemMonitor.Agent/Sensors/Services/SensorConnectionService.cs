@@ -59,6 +59,8 @@ public sealed class SensorConnectionService(
         try
         {
             var sensor = await sensorService.JoinAsync(ipAddress, port, cancellationToken).ConfigureAwait(false);
+            logger.LogInformation("Sensor session established id={SensorId}", sensor.Id);
+
             var connectionContext = new SensorConnectionContext
             {
                 Sensor = sensor,
@@ -69,10 +71,14 @@ public sealed class SensorConnectionService(
 
             _connectionHandlers.TryAdd(sensor.Id, sensorConnectionHandler);
             sensorConnectionHandler.ConfigureContext(connectionContext);
+
             await NotifyConfigurationChangedAsync(sensor.Id, sensor.MeasurementPeriodMilliseconds, cancellationToken).ConfigureAwait(false);
+            logger.LogInformation("Starting handler for sensor id={SensorId}", sensor.Id);
+
             await sensorConnectionHandler.HandleSensorAsync(connectionContext, cancellationToken).ConfigureAwait(false);
 
             _connectionHandlers.TryRemove(sensor.Id, out _);
+            logger.LogInformation("Connection handler removed for sensor id={SensorId}", sensor.Id);
         }
         catch (Exception exception)
         {

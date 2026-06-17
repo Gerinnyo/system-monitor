@@ -31,17 +31,27 @@ public sealed class AgentConnectionHandler(
     {
         var measurementCollector = measurementCollectors.ToDictionary(x => x.Platform)[_platform];
 
-        while (!cancellationToken.IsCancellationRequested)
+        try
         {
-            var measurements = measurementCollector.Collect();
-
-            foreach (var measurement in measurements)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                circularBuffer.Add(measurement);
-                await NotifyMeasurementCompletedAsync(measurement, cancellationToken).ConfigureAwait(false);
-            }
+                var measurements = measurementCollector.Collect();
 
-            await Task.Delay(sensorConfiguration.MeasurementPeriodMilliseconds, cancellationToken).ConfigureAwait(false);
+                foreach (var measurement in measurements)
+                {
+                    circularBuffer.Add(measurement);
+                    logger.LogDebug("Collected measurement for sensor {SensorId} timestamp={Timestamp}", sensorConfiguration.SensorId, measurement.Timestamp);
+
+                    await NotifyMeasurementCompletedAsync(measurement, cancellationToken).ConfigureAwait(false);
+                    logger.LogInformation("Notified measurement completed for sensor {SensorId}", sensorConfiguration.SensorId);
+                }
+
+                await Task.Delay(sensorConfiguration.MeasurementPeriodMilliseconds, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "An error occured during measurement collection of sensor {SensorId}", sensorConfiguration.SensorId);
         }
     }
 
@@ -53,13 +63,15 @@ public sealed class AgentConnectionHandler(
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                logger.LogDebug("Waiting for configuration envelope from agent {Host}:{Port}", agentConfiguration.Value.Host, agentConfiguration.Value.Port);
                 var eventEnvelope = await messenger.ReceiveAsync(stream, cancellationToken).ConfigureAwait(false);
                 if (eventEnvelope is null)
                 {
                     break;
                 }
 
-                await HandleConfigurationChangedAsync(eventEnvelope, cancellationToken).ConfigureAwait(false);
+                logger.LogInformation("Received configuration event of type {EventType} from agent", eventEnvelope.EventType);
+                HandleConfigurationChanged(eventEnvelope);
             }
         }
         catch (Exception exception)
@@ -72,7 +84,7 @@ public sealed class AgentConnectionHandler(
         connectionContext.Client.Dispose();
     }
 
-    private async Task HandleConfigurationChangedAsync(EventEnvelope eventEnvelope, CancellationToken cancellationToken)
+    private void HandleConfigurationChanged(EventEnvelope eventEnvelope)
     {
         if (eventEnvelope.EventType != SensorConfigurationChangedEvent.Type)
         {
@@ -101,5 +113,6 @@ public sealed class AgentConnectionHandler(
         };
 
         await messenger.SendAsync(stream, eventEnvelope, cancellationToken).ConfigureAwait(false);
+        logger.LogDebug("Sent measurement event for sensor {SensorId}", sensorConfiguration.SensorId);
     }
 }

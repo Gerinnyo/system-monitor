@@ -26,6 +26,8 @@ public sealed class AgentConnectionService(
             {
                 await client.ConnectAsync(agentConfiguration.Value.Host, agentConfiguration.Value.Port, cancellationToken).ConfigureAwait(false);
                 await ConfigureSensorAsync(client, cancellationToken).ConfigureAwait(false);
+
+                logger.LogInformation("Agent configured; starting handler");
                 await HandleAgentAsync(client, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception exception)
@@ -49,11 +51,13 @@ public sealed class AgentConnectionService(
         var eventEnvelope = await messenger.ReceiveAsync(stream, cancellationToken).ConfigureAwait(false);
         if (eventEnvelope is null || eventEnvelope.EventType != SensorConfigurationChangedEvent.Type)
         {
+            logger.LogWarning("Received invalid sensor configuration event from agent");
             throw new UnconfiguredSensorException();
         }
 
         var sensorConfigurationChangedEvent = JsonSerializer.Deserialize<SensorConfigurationChangedEvent>(eventEnvelope.Payload)!;
         sensorConfiguration.MeasurementPeriodMilliseconds = sensorConfigurationChangedEvent.MeasurementPeriodMilliseconds;
+        logger.LogInformation("Configured sensor measurement period to {Period}ms", sensorConfiguration.MeasurementPeriodMilliseconds);
     }
 
     private async Task HandleAgentAsync(TcpClient client, CancellationToken cancellationToken)
@@ -67,6 +71,8 @@ public sealed class AgentConnectionService(
 
         agentConnectionHandler.ConfigureContext(agentConnectionContext);
         agentConnectionHandler.FireConfigurationChangeListener(cancellationToken);
+
+        logger.LogInformation("Agent configuration listener started");
         await agentConnectionHandler.HandleAgentAsync(cancellationToken).ConfigureAwait(false);
     }
 }

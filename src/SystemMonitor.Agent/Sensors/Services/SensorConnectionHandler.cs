@@ -21,16 +21,20 @@ public sealed class SensorConnectionHandler(Messenger messenger, IServiceScopeFa
     {
         var stream = connectionContext.Client.GetStream();
 
+        logger.LogInformation("HandleSensorAsync started for sensor {SensorId}", connectionContext.Sensor.Id);
+
         try
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                logger.LogDebug("Waiting for event envelope from sensor {SensorId}", connectionContext.Sensor.Id);
                 var eventEnvelope = await messenger.ReceiveAsync(stream, cancellationToken).ConfigureAwait(false);
                 if (eventEnvelope is null)
                 {
                     break;
                 }
 
+                logger.LogDebug("Received event of type {EventType} from sensor {SensorId}", eventEnvelope.EventType, connectionContext.Sensor.Id);
                 await HandleMeasurementCompletedAsync(eventEnvelope, cancellationToken).ConfigureAwait(false);
             }
         }
@@ -44,6 +48,7 @@ public sealed class SensorConnectionHandler(Messenger messenger, IServiceScopeFa
         }
 
         await DisconnectAsync(cancellationToken).ConfigureAwait(false);
+        logger.LogInformation("HandleSensorAsync finished for sensor {SensorId}", connectionContext.Sensor.Id);
         connectionContext.Client.Close();
         stream.Dispose();
         connectionContext.Client.Dispose();
@@ -68,7 +73,9 @@ public sealed class SensorConnectionHandler(Messenger messenger, IServiceScopeFa
 
         using var scope = serviceScopeFactory.CreateScope();
         var measurementService = scope.ServiceProvider.GetRequiredService<MeasurementService>();
+
         await measurementService.StoreAsync(measurement, cancellationToken).ConfigureAwait(false);
+        logger.LogDebug("Stored measurement for sensor {SensorId}", connectionContext.Sensor.Id);
     }
 
     public async Task NotifyConfigurationChangedAsync(int measurementPeriodMilliseconds, CancellationToken cancellationToken)
@@ -86,6 +93,7 @@ public sealed class SensorConnectionHandler(Messenger messenger, IServiceScopeFa
         };
 
         await messenger.SendAsync(stream, eventEnvelope, cancellationToken).ConfigureAwait(false);
+        logger.LogDebug("Notified sensor {SensorId} of configuration change", connectionContext.Sensor.Id);
     }
 
     private async Task DisconnectAsync(CancellationToken cancellationToken)
@@ -94,5 +102,6 @@ public sealed class SensorConnectionHandler(Messenger messenger, IServiceScopeFa
         var sensorService = scope.ServiceProvider.GetRequiredService<SensorService>();
 
         await sensorService.DisonnectAsync(connectionContext.Sensor.Id, cancellationToken).ConfigureAwait(false);
+        logger.LogInformation("Sensor {SensorId} disconnected", connectionContext.Sensor.Id);
     }
 }

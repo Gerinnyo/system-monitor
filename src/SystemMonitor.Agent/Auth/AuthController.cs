@@ -11,7 +11,8 @@ namespace SystemMonitor.Agent.Auth;
 [Route("[controller]")]
 public sealed class AuthController(
     UserManager<IdentityUser> userManager,
-    JwtTokenProvider jwtTokenProvider) : ControllerBase
+    JwtTokenProvider jwtTokenProvider,
+    ILogger<AuthController> logger) : ControllerBase
 {
     /// <summary>
     /// Authenticates a user and generates a JWT token.
@@ -27,19 +28,25 @@ public sealed class AuthController(
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
+        logger.LogInformation("Login attempt for {Username}", request.Username);
+
         var user = await userManager.FindByNameAsync(request.Username).ConfigureAwait(false);
         if (user is null)
         {
+            logger.LogWarning("Login failed for {Username}: user not found", request.Username);
             return Unauthorized();
         }
 
         bool passwordValid = await userManager.CheckPasswordAsync(user, request.Password).ConfigureAwait(false);
         if (!passwordValid)
         {
+            logger.LogWarning("Login failed for {Username}: invalid password", request.Username);
             return Unauthorized();
         }
 
         var token = jwtTokenProvider.CreateFor(user);
+        logger.LogInformation("Login successful for {Username}", request.Username);
+
         return Ok(token);
     }
 }
