@@ -79,7 +79,7 @@ if ($svc) {
 # ─────────────────────────────────────────────────────────────────────────────
 
 Write-Step "Starting Agent  (http://localhost:5000)"
-Start-Process -FilePath $AgentExe -WorkingDirectory $AgentOut
+Start-Process -FilePath $AgentExe -WorkingDirectory $AgentOut -ArgumentList "--urls http://localhost:5000"
 
 Write-Host "  Waiting for Agent to initialise..."
 Start-Sleep -Seconds 3
@@ -88,14 +88,14 @@ Start-Sleep -Seconds 3
 # 4. Start Dashboard
 # ─────────────────────────────────────────────────────────────────────────────
 
-Write-Step "Starting Dashboard  (http://localhost:5069)"
+Write-Step "Starting Dashboard  (http://localhost:5100)"
 # Blazor WASM needs the ASP.NET Core dev server (DevServer package).
 # The published output in $DashboardOut is static files only, with no runnable
 # host, so we use dotnet run here. --no-build reuses the Release artifacts that
 # dotnet publish already produced above.
 Start-Process powershell -ArgumentList @(
     "-NoExit", "-Command",
-    "dotnet run --project `"$DashboardSrc`" -c Release --no-build --launch-profile http"
+    "dotnet run --project `"$DashboardSrc`" -c Release --no-build --urls http://localhost:5100"
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -109,5 +109,5 @@ Write-Host "  Service started."
 Write-Host ""
 Write-Host "All services are running." -ForegroundColor Green
 Write-Host "  Agent     : http://localhost:5000"
-Write-Host "  Dashboard : http://localhost:5069"
+Write-Host "  Dashboard : http://localhost:5100"
 Write-Host "  Sensor    : sc query $ServiceName"

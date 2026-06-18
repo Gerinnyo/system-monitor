@@ -104,7 +104,7 @@ step "Starting Agent  (http://localhost:5000)"
 # Kill any previous instance
 pkill -f "SystemMonitor.Agent" 2>/dev/null || true
 
-sudo -u "$RUN_AS" nohup "$AGENT_BIN" \
+sudo -u "$RUN_AS" nohup "$AGENT_BIN" --urls "http://localhost:5000" \
     > "$OUT/agent.log" 2>&1 &
 echo "  Agent started (PID $!, log: $OUT/agent.log)"
 
@@ -125,7 +125,7 @@ sudo -u "$RUN_AS" nohup dotnet run \
     --project "$DASHBOARD_SRC" \
     -c Release \
     --no-build \
-    --launch-profile http \
+    --urls "http://localhost:5069" \
     > "$OUT/dashboard.log" 2>&1 &
 echo "  Dashboard started (PID $!, log: $OUT/dashboard.log)"
 
