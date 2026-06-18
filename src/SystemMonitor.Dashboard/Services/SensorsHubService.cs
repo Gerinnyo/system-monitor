@@ -4,30 +4,26 @@ using SystemMonitor.Shared.Sensors.Dtos;
 
 namespace SystemMonitor.Dashboard.Services;
 
-public class SensorsHubService : IAsyncDisposable
+public class SensorsHubService(AuthService authService, AgentOptions agentOptions, ILogger<SensorsHubService> logger) : IAsyncDisposable
 {
-    private readonly AuthService _authService;
     private HubConnection? _connection;
 
     public IReadOnlyList<SensorDto> Sensors { get; private set; } = [];
     public HubConnectionState ConnectionState => _connection?.State ?? HubConnectionState.Disconnected;
     public event Action? OnChange;
 
-    public SensorsHubService(AuthService authService)
-    {
-        _authService = authService;
-    }
-
     public async Task StartAsync()
     {
         if (_connection is not null)
             return;
 
+        logger.LogInformation("Connecting to sensors-state hub");
+
         _connection = new HubConnectionBuilder()
-            .WithUrl("http://localhost:5000/sensors-state", options =>
+            .WithUrl($"{agentOptions.BaseUrl}/sensors-state", options =>
             {
                 options.Transports = HttpTransportType.LongPolling;
-                options.AccessTokenProvider = _authService.GetTokenAsync;
+                options.AccessTokenProvider = authService.GetTokenAsync;
             })
             .WithAutomaticReconnect()
             .Build();
@@ -35,14 +31,44 @@ public class SensorsHubService : IAsyncDisposable
         _connection.On<IEnumerable<SensorDto>>("UpdateSensorStatesAsync", sensors =>
         {
             Sensors = sensors.ToList();
+            logger.LogInformation("Received state update — {Count} sensor(s)", Sensors.Count);
             OnChange?.Invoke();
         });
 
-        _connection.Reconnecting += _ => { OnChange?.Invoke(); return Task.CompletedTask; };
-        _connection.Reconnected += _ => { OnChange?.Invoke(); return Task.CompletedTask; };
-        _connection.Closed += _ => { OnChange?.Invoke(); return Task.CompletedTask; };
+        _connection.Reconnecting += ex =>
+        {
+            logger.LogWarning("Hub reconnecting: {Reason}", ex?.Message);
+            OnChange?.Invoke();
+            return Task.CompletedTask;
+        };
 
-        await _connection.StartAsync();
+        _connection.Reconnected += id =>
+        {
+            logger.LogInformation("Hub reconnected (connection ID: {Id})", id);
+            OnChange?.Invoke();
+            return Task.CompletedTask;
+        };
+
+        _connection.Closed += ex =>
+        {
+            if (ex is null)
+                logger.LogInformation("Hub connection closed");
+            else
+                logger.LogError(ex, "Hub connection closed with error");
+            OnChange?.Invoke();
+            return Task.CompletedTask;
+        };
+
+        try
+        {
+            await _connection.StartAsync();
+            logger.LogInformation("Connected to sensors-state hub");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to connect to sensors-state hub");
+        }
+
         OnChange?.Invoke();
     }
 
@@ -51,6 +77,7 @@ public class SensorsHubService : IAsyncDisposable
         if (_connection is null)
             return;
 
+        logger.LogInformation("Stopping sensors-state hub connection");
         await _connection.StopAsync();
         await _connection.DisposeAsync();
         _connection = null;

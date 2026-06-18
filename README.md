@@ -7,7 +7,7 @@ A real-time system monitoring solution. Sensors collect CPU and memory metrics f
 ```
 ┌─────────────────┐                         ┌──────────────────────┐
 │  Sensor(s)      │  ──── measurements ───► │  Agent               │
-│  (Worker Svc)   │        TCP :5100        │  (ASP.NET Core API)  │
+│  (Worker Svc)   │        TCP :5200        │  (ASP.NET Core API)  │
 │                 │  ◄─ config updates ───  │  HTTP  :5000         │
 └─────────────────┘                         │  SQLite DB           │
                                             └──────────┬───────────┘
@@ -16,7 +16,7 @@ A real-time system monitoring solution. Sensors collect CPU and memory metrics f
                                             ┌──────────────────────┐
                                             │  Dashboard           │
                                             │  (Blazor WASM)       │
-                                            │  HTTP  :5069         │
+                                            │  HTTP  :5100         │
                                             └──────────────────────┘
 ```
 
@@ -42,7 +42,7 @@ A real-time system monitoring solution. Sensors collect CPU and memory metrics f
 
 | Key | Default | Description |
 |---|---|---|
-| `TcpConfiguration:Port` | `5100` | Port that sensors connect to |
+| `TcpConfiguration:Port` | `5200` | Port that sensors connect to |
 | `ConnectionStrings:ApplicationDatabaseContext` | `../../Database.db` | SQLite database path |
 | `JwtConfiguration` | — | Secret key, issuer, audience for JWT auth |
 
@@ -51,7 +51,7 @@ A real-time system monitoring solution. Sensors collect CPU and memory metrics f
 | Key | Default | Description |
 |---|---|---|
 | `AgentConfiguration:Host` | `127.0.0.1` | Agent IP address |
-| `AgentConfiguration:Port` | `5100` | Agent TCP port |
+| `AgentConfiguration:Port` | `5200` | Agent TCP port |
 | `BufferConfiguration:BufferCapacity` | `100` | Circular buffer size (measurements) |
 
 ## Running
@@ -97,7 +97,7 @@ This publishes all three projects, writes a systemd unit file to `/etc/systemd/s
 | Service | How it runs | URL / command |
 |---|---|---|
 | Agent | Published executable | `http://localhost:5000` |
-| Dashboard | `dotnet run` (Blazor dev server) | `http://localhost:5069` |
+| Dashboard | `dotnet run` (Blazor dev server) | `http://localhost:5100` |
 | Sensor | Windows Service / systemd unit | `sc query SystemMonitorSensor` / `systemctl status SystemMonitorSensor` |
 
 ### Logs
@@ -110,4 +110,4 @@ This publishes all three projects, writes a systemd unit file to `/etc/systemd/s
 
 ### First run — register an account
 
-Navigate to `http://localhost:5069`, register an account, then log in. The Agent's Swagger UI is available at `http://localhost:5000/swagger`.
+Navigate to `http://localhost:5100`, register an account, then log in. The Agent's Swagger UI is available at `http://localhost:5000/swagger`.

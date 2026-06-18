@@ -115,7 +115,7 @@ sleep 3
 # 4. Start Dashboard
 # ─────────────────────────────────────────────────────────────────────────────
 
-step "Starting Dashboard  (http://localhost:5069)"
+step "Starting Dashboard  (http://localhost:5100)"
 
 # Blazor WASM requires the ASP.NET Core dev server; published output is static
 # files only. --no-build reuses the Release artifacts from the publish step.
@@ -125,7 +125,7 @@ sudo -u "$RUN_AS" nohup dotnet run \
     --project "$DASHBOARD_SRC" \
     -c Release \
     --no-build \
-    --urls "http://localhost:5069" \
+    --urls "http://localhost:5100" \
     > "$OUT/dashboard.log" 2>&1 &
 echo "  Dashboard started (PID $!, log: $OUT/dashboard.log)"
 
@@ -139,5 +139,5 @@ systemctl start "$SERVICE_NAME"
 echo
 echo "All services are running."
 echo "  Agent     : http://localhost:5000  (log: $OUT/agent.log)"
-echo "  Dashboard : http://localhost:5069  (log: $OUT/dashboard.log)"
+echo "  Dashboard : http://localhost:5100  (log: $OUT/dashboard.log)"
 echo "  Sensor    : systemctl status $SERVICE_NAME"

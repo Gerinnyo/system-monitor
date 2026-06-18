@@ -4,13 +4,17 @@ using SystemMonitor.Shared.Measurements.Dtos;
 
 namespace SystemMonitor.Dashboard.Services;
 
-public sealed class MeasurementApiService(HttpClient httpClient, AuthService authService)
+public sealed class MeasurementApiService(HttpClient httpClient, AuthService authService, ILogger<MeasurementApiService> logger)
 {
     public async Task<MeasurementsPaginatedDto?> QueryAsync(
         int? sensorId, DateTime? from, DateTime? to,
         int page, int pageSize,
         CancellationToken cancellationToken = default)
     {
+        logger.LogInformation(
+            "Querying measurements — sensor: {SensorId}, from: {From}, to: {To}, page: {Page}/{PageSize}",
+            sensorId?.ToString() ?? "all", from, to, page, pageSize);
+
         var token = await authService.GetTokenAsync();
 
         var parts = new List<string> { $"page={page}", $"pageSize={pageSize}" };
@@ -26,8 +30,13 @@ public sealed class MeasurementApiService(HttpClient httpClient, AuthService aut
 
         var response = await httpClient.SendAsync(request, cancellationToken);
         if (!response.IsSuccessStatusCode)
+        {
+            logger.LogWarning("Measurements query failed — HTTP {StatusCode}", (int)response.StatusCode);
             return null;
+        }
 
-        return await response.Content.ReadFromJsonAsync<MeasurementsPaginatedDto>(cancellationToken: cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<MeasurementsPaginatedDto>(cancellationToken: cancellationToken);
+        logger.LogInformation("Measurements query returned {Total} total record(s)", result?.Total ?? 0);
+        return result;
     }
 }

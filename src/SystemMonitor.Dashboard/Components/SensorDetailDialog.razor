@@ -1,6 +1,7 @@
 @implements IAsyncDisposable
 @inject AuthService AuthService
 @inject SensorsHubService HubService
+@inject AgentOptions AgentOptions
 
 <div class="dialog-backdrop" @onclick="OnClose">
     <div class="dialog-box" @onclick:stopPropagation="true" @onkeydown="OnKeyDown" tabindex="-1">
@@ -123,7 +124,7 @@
         HubService.OnChange += StateHasChanged;
 
         _connection = new HubConnectionBuilder()
-            .WithUrl($"http://localhost:5000/sensors/{Sensor.Id}", options =>
+            .WithUrl($"{AgentOptions.BaseUrl}/sensors/{Sensor.Id}", options =>
             {
                 options.Transports = HttpTransportType.LongPolling;
                 options.AccessTokenProvider = AuthService.GetTokenAsync;

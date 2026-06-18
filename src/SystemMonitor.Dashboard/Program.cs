@@ -8,10 +8,14 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
+var agentUrl = builder.Configuration["AgentUrl"] ?? "http://localhost:5000";
+
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("http://localhost:5000/")
+    BaseAddress = new Uri(agentUrl.TrimEnd('/') + "/")
 });
+
+builder.Services.AddSingleton(new AgentOptions(agentUrl.TrimEnd('/')));
 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthService>();
