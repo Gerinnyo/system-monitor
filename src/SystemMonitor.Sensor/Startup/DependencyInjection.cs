@@ -11,7 +11,7 @@ public static class DependencyInjection
         Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(builder.Configuration)
             .WriteTo.Console()
-            .WriteTo.File("logs/sensor-.log", rollingInterval: RollingInterval.Day, rollOnFileSizeLimit: true, fileSizeLimitBytes: 10 * 1024 * 1024, retainedFileCountLimit: 7)
+            .WriteTo.File(Path.Combine(AppContext.BaseDirectory, "logs", "sensor-.log"), rollingInterval: RollingInterval.Day, rollOnFileSizeLimit: true, fileSizeLimitBytes: 10 * 1024 * 1024, retainedFileCountLimit: 7)
             .CreateLogger();
 
         builder.Services.AddSerilog();

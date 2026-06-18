@@ -8,7 +8,7 @@ using SystemMonitor.Shared.Notifications;
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.RegisterLogger();
-builder.Services.AddWindowsService(o => o.ServiceName = "SystemMonitor");
+builder.Services.AddWindowsService(o => o.ServiceName = "SystemMonitorSensor");
 builder.Services.AddSystemd();
 builder.Services.AddHostedService<AgentConnectionService>();
 

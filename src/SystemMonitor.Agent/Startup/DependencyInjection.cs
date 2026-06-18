@@ -26,7 +26,7 @@ public static class DependencyInjection
         webApplicationBuilder.Host.UseSerilog((ctx, cfg) =>
             cfg.ReadFrom.Configuration(ctx.Configuration)
                .WriteTo.Console()
-               .WriteTo.File("logs/agent-.log",
+               .WriteTo.File(Path.Combine(AppContext.BaseDirectory, "logs", "agent-.log"),
                     rollingInterval: RollingInterval.Day,
                     rollOnFileSizeLimit: true,
                     fileSizeLimitBytes: 10 * 1024 * 1024,
