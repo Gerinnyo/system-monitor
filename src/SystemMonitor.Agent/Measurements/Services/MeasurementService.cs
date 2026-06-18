@@ -2,11 +2,15 @@ using Microsoft.EntityFrameworkCore;
 using SystemMonitor.Agent.Measurements.Entities;
 using SystemMonitor.Agent.Persistence;
 using SystemMonitor.Agent.Sockets.Sensor;
+using SystemMonitor.Agent.Sockets.SensorsState;
 using SystemMonitor.Shared.Measurements.Dtos;
 
 namespace SystemMonitor.Agent.Measurements.Services;
 
-public sealed class MeasurementService(ApplicationDatabaseContext dbContext, SensorSocket sensorSocket)
+public sealed class MeasurementService(
+    ApplicationDatabaseContext dbContext,
+    SensorSocket sensorSocket,
+    SensorsStateSocket sensorsStateSocket)
 {
     public async Task StoreAsync(Measurement measurement, CancellationToken cancellationToken)
     {
@@ -22,7 +26,8 @@ public sealed class MeasurementService(ApplicationDatabaseContext dbContext, Sen
 
         dbContext.Measurements.Add(measurement);
         await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await sensorSocket.NotifyUpdateAsync(measurement.SensorId, cancellationToken).ConfigureAwait(false);
+        await sensorSocket.TryNotifyUpdateAsync(measurement.SensorId, cancellationToken).ConfigureAwait(false);
+        await sensorsStateSocket.NotifyUpdateAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<MeasurementQueryResult> QueryAsync(int? sensorId, DateTime? from, DateTime? to, int page, int pageSize, CancellationToken cancellationToken)

@@ -99,12 +99,7 @@ public static class DependencyInjection
 
     public static IServiceCollection AddCors(this IServiceCollection services, IConfiguration configuration)
     {
-        const string AllowedOriginPath = "Cors:AllowedOrigin";
-        services.AddCors(o => o.AddDefaultPolicy(x =>
-            x.WithOrigins(configuration[AllowedOriginPath]!)
-                .AllowAnyHeader()
-                .AllowAnyMethod()));
-
+        services.AddCors(o => o.AddDefaultPolicy(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()));
         return services;
     }
 

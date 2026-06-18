@@ -1,0 +1,104 @@
+@page "/register"
+@layout AuthLayout
+@inject AuthService AuthService
+@inject CustomAuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Create Account — System Monitor</PageTitle>
+
+<h2 class="auth-heading">Create an account</h2>
+<p class="auth-sub">Fill in the details below to get started.</p>
+
+<EditForm Model="@_model" OnValidSubmit="HandleRegister">
+    <DataAnnotationsValidator />
+
+    <div class="auth-field">
+        <label class="auth-label" for="username">Username</label>
+        <InputText id="username" @bind-Value="_model.Username" class="auth-input" autocomplete="username" />
+        <ValidationMessage For="@(() => _model.Username)" class="auth-validation" />
+    </div>
+
+    <div class="auth-field">
+        <label class="auth-label" for="password">Password</label>
+        <InputText id="password" @bind-Value="_model.Password" type="password" class="auth-input" autocomplete="new-password" />
+        <ValidationMessage For="@(() => _model.Password)" class="auth-validation" />
+    </div>
+
+    <div class="auth-field">
+        <label class="auth-label" for="confirm">Confirm Password</label>
+        <InputText id="confirm" @bind-Value="_model.ConfirmPassword" type="password" class="auth-input" autocomplete="new-password" />
+        <ValidationMessage For="@(() => _model.ConfirmPassword)" class="auth-validation" />
+    </div>
+
+    @if (_errors.Count > 0)
+    {
+        <div class="auth-error">
+            @foreach (var error in _errors)
+            {
+                <div>@error</div>
+            }
+        </div>
+    }
+
+    @if (_success)
+    {
+        <div class="auth-success">Account created! Redirecting to sign in…</div>
+    }
+
+    <button type="submit" class="btn-auth" disabled="@(_isLoading || _success)">
+        @if (_isLoading)
+        {
+            <span class="spinner-border spinner-border-sm" role="status"></span>
+        }
+        Create Account
+    </button>
+</EditForm>
+
+<p class="auth-footer">Already have an account? <a href="/login">Sign in</a></p>
+
+@code {
+    private readonly RegisterModel _model = new();
+    private List<string> _errors = [];
+    private bool _isLoading;
+    private bool _success;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated == true)
+            Navigation.NavigateTo("/");
+    }
+
+    private async Task HandleRegister()
+    {
+        _isLoading = true;
+        _errors = [];
+
+        var errors = await AuthService.RegisterAsync(_model.Username, _model.Password);
+        if (errors.Count == 0)
+        {
+            _success = true;
+            await Task.Delay(1500);
+            Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            _errors = errors;
+            _isLoading = false;
+        }
+    }
+
+    private class RegisterModel
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Username { get; set; } = "";
+
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.MinLength(5, ErrorMessage = "Password must be at least 5 characters.")]
+        public string Password { get; set; } = "";
+
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
+        public string ConfirmPassword { get; set; } = "";
+    }
+}

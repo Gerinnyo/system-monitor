@@ -1,0 +1,296 @@
+@page "/measurements"
+@attribute [Authorize]
+@inject MeasurementApiService MeasurementApi
+
+<PageTitle>Measurements</PageTitle>
+
+<div class="measurements-layout">
+<div class="page-header">
+    <h1>Measurements</h1>
+    <button class="btn-refresh" @onclick="LoadAsync" disabled="@_loading" title="Refresh">
+        <svg class="@(_loading ? "icon-spin" : "")" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+            <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+        </svg>
+        Refresh
+    </button>
+</div>
+
+<div class="filter-card">
+    <div class="filter-group">
+        <span class="filter-label">Sensor ID</span>
+        <input class="filter-input filter-input-sm" type="number" min="1" placeholder="All"
+               value="@_filterSensorId"
+               @onchange="e => _filterSensorId = e.Value?.ToString()" />
+    </div>
+    <div class="filter-group">
+        <span class="filter-label">From</span>
+        <input class="filter-input filter-input-dt" type="datetime-local"
+               value="@_filterFrom"
+               @onchange="e => _filterFrom = e.Value?.ToString() ?? string.Empty" />
+    </div>
+    <div class="filter-group">
+        <span class="filter-label">To</span>
+        <input class="filter-input filter-input-dt" type="datetime-local"
+               value="@_filterTo"
+               @onchange="e => _filterTo = e.Value?.ToString() ?? string.Empty" />
+    </div>
+    <div class="filter-actions">
+        <button class="btn-filter-clear" @onclick="ClearFiltersAsync" disabled="@_loading">Clear</button>
+        <button class="btn-filter-apply" @onclick="ApplyFiltersAsync" disabled="@_loading">Apply</button>
+    </div>
+</div>
+
+@if (_error is not null)
+{
+    <div class="error-banner">@_error</div>
+}
+
+<div class="table-card">
+    @if (_loading && _result is null)
+    {
+        <div class="table-state">
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            Loading…
+        </div>
+    }
+    else if (_result is null)
+    {
+        <div class="table-state">No data available.</div>
+    }
+    else
+    {
+        @if (_loading)
+        {
+            <div class="table-loading-overlay">
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                Loading…
+            </div>
+        }
+        @if (_result.Measurements.Count == 0)
+        {
+            <div class="table-state">No measurements found.</div>
+        }
+        else
+        {
+            var rows = _result.Measurements
+                .GroupBy(m => (m.SensorId, m.Timestamp))
+                .OrderByDescending(g => g.Key.Timestamp)
+                .Select(g => (
+                    Time: g.Key.Timestamp,
+                    SensorId: g.Key.SensorId,
+                    Cpu: g.FirstOrDefault(m => m.MetricType == "CPU"),
+                    Mem: g.FirstOrDefault(m => m.MetricType != "CPU")
+                ))
+                .ToList();
+
+            <table class="m-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Sensor</th>
+                        <th class="col-right col-cpu-h">CPU</th>
+                        <th class="col-right col-mem-h">Memory</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in rows)
+                    {
+                        <tr>
+                            <td class="col-time">@row.Time.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            <td class="col-sensor">#@row.SensorId</td>
+                            <td class="col-right col-value">
+                                @if (row.Cpu is not null)
+                                {
+                                    @row.Cpu.Value.ToString("F1")
+                                    <span class="unit">@row.Cpu.Unit</span>
+                                }
+                                else
+                                {
+                                    <span class="no-data">—</span>
+                                }
+                            </td>
+                            <td class="col-right col-value">
+                                @if (row.Mem is not null)
+                                {
+                                    @row.Mem.Value.ToString("F1")
+                                    <span class="unit">@row.Mem.Unit</span>
+                                }
+                                else
+                                {
+                                    <span class="no-data">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+</div>
+
+@if (_result is not null && _result.Total > 0)
+{
+    var start = (_currentPage - 1) * _pageSize + 1;
+    var end = Math.Min(_currentPage * _pageSize, _result.Total);
+
+    <div class="pagination-bar">
+        <span class="pagination-info">
+            Showing @start.ToString("N0")–@end.ToString("N0") of @_result.Total.ToString("N0") measurements
+        </span>
+
+        @if (TotalPages > 1)
+        {
+            <div class="pagination-controls">
+                <button class="page-btn" title="Previous page"
+                        @onclick="() => GoToPageAsync(_currentPage - 1)"
+                        disabled="@(_currentPage <= 1 || _loading)">
+                    &#8592;
+                </button>
+
+                @foreach (var p in GetPageNumbers(_currentPage, TotalPages))
+                {
+                    if (p is null)
+                    {
+                        <span class="page-ellipsis">…</span>
+                    }
+                    else
+                    {
+                        var num = p.Value;
+                        <button class="page-btn @(num == _currentPage ? "page-btn-active" : "")"
+                                @onclick="() => GoToPageAsync(num)"
+                                disabled="@_loading">
+                            @num
+                        </button>
+                    }
+                }
+
+                <button class="page-btn" title="Next page"
+                        @onclick="() => GoToPageAsync(_currentPage + 1)"
+                        disabled="@(_currentPage >= TotalPages || _loading)">
+                    &#8594;
+                </button>
+            </div>
+        }
+
+        <div class="page-size-picker">
+            Per page:
+            <select value="@_pageSize" @onchange="OnPageSizeChangedAsync" disabled="@_loading">
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+    </div>
+}
+</div>
+
+@code {
+    private MeasurementsPaginatedDto? _result;
+    private bool _loading;
+    private string? _error;
+
+    private int _currentPage = 1;
+    private int _pageSize = 50;
+
+    private string? _filterSensorId;
+    private string _filterFrom = string.Empty;
+    private string _filterTo = string.Empty;
+
+    private int? SensorIdFilter =>
+        int.TryParse(_filterSensorId, out var v) && v > 0 ? v : null;
+
+    private DateTime? FromFilter =>
+        DateTime.TryParse(_filterFrom, out var d)
+        ? DateTime.SpecifyKind(d, DateTimeKind.Local).ToUniversalTime()
+        : null;
+
+    private DateTime? ToFilter =>
+        DateTime.TryParse(_filterTo, out var d)
+        ? DateTime.SpecifyKind(d, DateTimeKind.Local).ToUniversalTime()
+        : null;
+
+    private int TotalPages =>
+        _result is null || _pageSize == 0 ? 0
+        : (int)Math.Ceiling((double)_result.Total / _pageSize);
+
+    protected override async Task OnInitializedAsync()
+        => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = null;
+        StateHasChanged();
+
+        try
+        {
+            _result = await MeasurementApi.QueryAsync(
+                SensorIdFilter, FromFilter, ToFilter,
+                _currentPage, _pageSize);
+
+            if (_result is null)
+                _error = "Failed to load measurements.";
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ApplyFiltersAsync()
+    {
+        _currentPage = 1;
+        await LoadAsync();
+    }
+
+    private async Task ClearFiltersAsync()
+    {
+        _filterSensorId = null;
+        _filterFrom = string.Empty;
+        _filterTo = string.Empty;
+        _currentPage = 1;
+        await LoadAsync();
+    }
+
+    private async Task GoToPageAsync(int page)
+    {
+        _currentPage = page;
+        await LoadAsync();
+    }
+
+    private async Task OnPageSizeChangedAsync(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var size))
+        {
+            _pageSize = size;
+            _currentPage = 1;
+            await LoadAsync();
+        }
+    }
+
+    private IEnumerable<int?> GetPageNumbers(int current, int total)
+    {
+        if (total <= 7)
+            return Enumerable.Range(1, total).Select(p => (int?)p);
+
+        var visible = new SortedSet<int> { 1, total, current };
+        if (current - 1 >= 1) visible.Add(current - 1);
+        if (current + 1 <= total) visible.Add(current + 1);
+
+        var result = new List<int?>();
+        int? prev = null;
+        foreach (var p in visible)
+        {
+            if (prev.HasValue && p - prev.Value > 1)
+                result.Add(null);
+            result.Add(p);
+            prev = p;
+        }
+        return result;
+    }
+}

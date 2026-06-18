@@ -1,0 +1,68 @@
+.auth-page {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Left branding panel — always dark */
+.auth-brand-panel {
+    flex: 0 0 380px;
+    background: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2.5rem;
+}
+
+.auth-brand-inner {
+    max-width: 280px;
+}
+
+.auth-brand-logo {
+    color: #3b82f6;
+    margin-bottom: 1.5rem;
+}
+
+.auth-brand-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0 0 0.75rem;
+    letter-spacing: -0.02em;
+}
+
+.auth-brand-tagline {
+    font-size: 0.9rem;
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Right form panel — responds to theme */
+.auth-form-panel {
+    flex: 1;
+    background: var(--auth-form-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.auth-form-inner {
+    width: 100%;
+    max-width: 380px;
+}
+
+@media (max-width: 640px) {
+    .auth-page {
+        flex-direction: column;
+    }
+
+    .auth-brand-panel {
+        flex: none;
+        padding: 2rem;
+    }
+
+    .auth-brand-tagline {
+        display: none;
+    }
+}

@@ -1,0 +1,81 @@
+@page "/login"
+@layout AuthLayout
+@inject AuthService AuthService
+@inject CustomAuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Sign In — System Monitor</PageTitle>
+
+<h2 class="auth-heading">Welcome back</h2>
+<p class="auth-sub">Sign in to your account to continue.</p>
+
+<EditForm Model="@_model" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+
+    <div class="auth-field">
+        <label class="auth-label" for="username">Username</label>
+        <InputText id="username" @bind-Value="_model.Username" class="auth-input" autocomplete="username" />
+        <ValidationMessage For="@(() => _model.Username)" class="auth-validation" />
+    </div>
+
+    <div class="auth-field">
+        <label class="auth-label" for="password">Password</label>
+        <InputText id="password" @bind-Value="_model.Password" type="password" class="auth-input" autocomplete="current-password" />
+        <ValidationMessage For="@(() => _model.Password)" class="auth-validation" />
+    </div>
+
+    @if (_errorMessage is not null)
+    {
+        <div class="auth-error">@_errorMessage</div>
+    }
+
+    <button type="submit" class="btn-auth" disabled="@_isLoading">
+        @if (_isLoading)
+        {
+            <span class="spinner-border spinner-border-sm" role="status"></span>
+        }
+        Sign In
+    </button>
+</EditForm>
+
+<p class="auth-footer">Don't have an account? <a href="/register">Create one</a></p>
+
+@code {
+    private readonly LoginModel _model = new();
+    private string? _errorMessage;
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated == true)
+            Navigation.NavigateTo("/");
+    }
+
+    private async Task HandleLogin()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        var token = await AuthService.LoginAsync(_model.Username, _model.Password);
+        if (token is not null)
+        {
+            AuthStateProvider.NotifyUserAuthentication(token);
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            _errorMessage = "Invalid username or password.";
+            _isLoading = false;
+        }
+    }
+
+    private class LoginModel
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Username { get; set; } = "";
+
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Password { get; set; } = "";
+    }
+}

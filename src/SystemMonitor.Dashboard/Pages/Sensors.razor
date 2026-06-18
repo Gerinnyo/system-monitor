@@ -1,0 +1,237 @@
+@page "/sensors"
+@attribute [Authorize]
+@implements IAsyncDisposable
+@inject SensorsHubService HubService
+@inject SensorApiService SensorApi
+
+@if (_dialogSensor is not null)
+{
+    <SensorDetailDialog Sensor="_dialogSensor" OnClose="CloseDialog" />
+}
+
+<PageTitle>Sensors</PageTitle>
+
+<div class="sensors-header">
+    <h1>Sensors</h1>
+    <span class="hub-state @HubStateCssClass">
+        <span class="hub-dot"></span>
+        @HubService.ConnectionState
+    </span>
+</div>
+
+@if (!HubService.Sensors.Any())
+{
+    <div class="sensors-empty">
+        @if (HubService.ConnectionState == HubConnectionState.Connecting ||
+             HubService.ConnectionState == HubConnectionState.Reconnecting)
+        {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            <span>Connecting…</span>
+        }
+        else
+        {
+            <span>No sensors found.</span>
+        }
+    </div>
+}
+else
+{
+    <div class="sensor-grid">
+        @foreach (var sensor in HubService.Sensors)
+        {
+            var edit = GetEdit(sensor.Id);
+            var isConnected = sensor.ConnectionState == "Connected";
+            <div class="sensor-card @(isConnected ? "card-connected" : "card-disconnected")"
+                 @onclick="() => OpenDialog(sensor)" role="button" title="Click for details">
+
+                <div class="sensor-card-header">
+                    <div class="sensor-info">
+                        <div class="sensor-name">
+                            Sensor <span class="sensor-id-num">#@sensor.Id</span>
+                        </div>
+                        <div class="sensor-address">@sensor.IpAddress:@sensor.Port</div>
+                    </div>
+                    <div class="sensor-state @(isConnected ? "state-connected" : "state-disconnected")">
+                        <span class="state-dot"></span>
+                        <span>@sensor.ConnectionState</span>
+                    </div>
+                </div>
+
+                <div class="sensor-card-body">
+                    @if (sensor.Measurements.Count == 0)
+                    {
+                        <div class="measurement-empty">No data yet</div>
+                    }
+                    else
+                    {
+                        <div class="measurement-list">
+                            @foreach (var m in sensor.Measurements)
+                            {
+                                <div class="measurement-block">
+                                    <div class="measurement-type">@m.MetricType</div>
+                                    <div class="measurement-value">
+                                        @m.Value.ToString("F1")<span class="measurement-unit">@m.Unit</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="sensor-card-footer" @onclick:stopPropagation="true">
+                    <div class="sensor-meta">
+                        <span class="meta-label">Period</span>
+
+                        @if (edit.Active)
+                        {
+                            <span class="period-editor">
+                                <input class="period-input"
+                                       type="number"
+                                       min="1"
+                                       step="0.5"
+                                       @bind="edit.Draft"
+                                       @onkeydown="e => OnPeriodKey(e, sensor.Id)"
+                                       disabled="@edit.Saving" />
+                                <span class="period-unit">s</span>
+                                <button class="btn-icon btn-save" title="Save (Enter)"
+                                        @onclick="() => SavePeriodAsync(sensor.Id)"
+                                        disabled="@edit.Saving">
+                                    @if (edit.Saving)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    }
+                                    else
+                                    {
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>
+                                        </svg>
+                                    }
+                                </button>
+                                <button class="btn-icon btn-cancel" title="Cancel (Esc)"
+                                        @onclick="() => CancelEdit(sensor.Id)"
+                                        disabled="@edit.Saving">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                                    </svg>
+                                </button>
+                                @if (edit.Error is not null)
+                                {
+                                    <span class="period-error">@edit.Error</span>
+                                }
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="period-display">
+                                <span class="meta-value">@(sensor.MeasurementPeriodMilliseconds / 1000.0)s</span>
+                                <button class="btn-icon btn-edit" title="Edit period"
+                                        @onclick="() => BeginEdit(sensor)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                                    </svg>
+                                </button>
+                            </span>
+                        }
+                    </div>
+
+                    @if (sensor.Measurements.Count > 0 && !edit.Active)
+                    {
+                        <span class="sensor-time">
+                            @sensor.Measurements[^1].Timestamp.ToLocalTime().ToString("HH:mm:ss")
+                        </span>
+                    }
+                </div>
+
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private string HubStateCssClass => HubService.ConnectionState switch
+    {
+        HubConnectionState.Connected => "hub-connected",
+        HubConnectionState.Reconnecting => "hub-reconnecting",
+        _ => "hub-disconnected"
+    };
+
+    private SensorDto? _dialogSensor;
+
+    private void OpenDialog(SensorDto sensor) => _dialogSensor = sensor;
+    private void CloseDialog() => _dialogSensor = null;
+
+    private readonly Dictionary<int, PeriodEdit> _edits = [];
+
+    private PeriodEdit GetEdit(int sensorId)
+    {
+        if (!_edits.TryGetValue(sensorId, out var edit))
+            _edits[sensorId] = edit = new();
+        return edit;
+    }
+
+    private void BeginEdit(SensorDto sensor)
+    {
+        var edit = GetEdit(sensor.Id);
+        edit.Draft = (sensor.MeasurementPeriodMilliseconds / 1000.0).ToString("G");
+        edit.Error = null;
+        edit.Active = true;
+    }
+
+    private void CancelEdit(int sensorId)
+    {
+        var edit = GetEdit(sensorId);
+        edit.Active = false;
+        edit.Error = null;
+    }
+
+    private async Task SavePeriodAsync(int sensorId)
+    {
+        var edit = GetEdit(sensorId);
+
+        if (!double.TryParse(edit.Draft,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out var seconds) || seconds < 1)
+        {
+            edit.Error = "Must be ≥ 1 second.";
+            return;
+        }
+
+        edit.Error = null;
+        edit.Saving = true;
+
+        var ok = await SensorApi.UpdatePeriodAsync(sensorId, (int)(seconds * 1000));
+
+        edit.Saving = false;
+        if (ok)
+            edit.Active = false;
+        else
+            edit.Error = "Update failed. Try again.";
+    }
+
+    private async Task OnPeriodKey(KeyboardEventArgs e, int sensorId)
+    {
+        if (e.Key == "Enter") await SavePeriodAsync(sensorId);
+        else if (e.Key == "Escape") CancelEdit(sensorId);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        HubService.OnChange += StateHasChanged;
+        await HubService.StartAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        HubService.OnChange -= StateHasChanged;
+        await HubService.StopAsync();
+    }
+
+    private class PeriodEdit
+    {
+        public bool Active  { get; set; }
+        public string Draft { get; set; } = "";
+        public bool Saving  { get; set; }
+        public string? Error { get; set; }
+    }
+}

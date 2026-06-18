@@ -13,7 +13,7 @@ public sealed class SensorSocket(
 {
     private const int MeasurementCount = 20;
 
-    public async Task NotifyUpdateAsync(int sensorId, CancellationToken cancellationToken)
+    public async Task<bool>TryNotifyUpdateAsync(int sensorId, CancellationToken cancellationToken)
     {
         var sensor = await dbContext.Sensors
             .Where(x => x.Id == sensorId)
@@ -44,9 +44,12 @@ public sealed class SensorSocket(
         if (sensor is null)
         {
             logger.LogWarning("The sensor {SensorId} that initiated the push is not found", sensorId);
+            return false;
         }
 
         await hubContext.Clients.Group(sensorId.ToString()).UpdateSensorAsync(sensor!).ConfigureAwait(false);
         logger.LogInformation("Notified clients about the update of sensor {SensorId}", sensorId);
+
+        return true;
     }
 }

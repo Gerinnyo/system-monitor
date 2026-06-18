@@ -1,5 +1,6 @@
 <Solution>
-  <Project Path="src/SystemMonitor.Sensor/SystemMonitor.Sensor.csproj" Id="d42e5595-e0b2-4882-8add-7465816546a4" />
+  <Project Path="src/SystemMonitor.Dashboard/SystemMonitor.Dashboard.csproj" />
+  <Project Path="src/SystemMonitor.Sensor/SystemMonitor.Sensor.csproj" />
   <Project Path="src/SystemMonitor.Agent/SystemMonitor.Agent.csproj" />
   <Project Path="src/SystemMonitor.Shared/SystemMonitor.Shared.csproj" />
 </Solution>

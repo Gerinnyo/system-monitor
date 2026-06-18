@@ -11,7 +11,7 @@ public sealed class SensorsStateSocket(
     IHubContext<SensorsStateHub, ISensorsStateClient> hubContext,
     ILogger<SensorsStateSocket> logger)
 {
-    private const int MeasurementCount = 1;
+    private const int MeasurementCount = 2;
 
     public async Task NotifyUpdateAsync(CancellationToken cancellationToken)
     {

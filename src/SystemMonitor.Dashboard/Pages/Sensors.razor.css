@@ -1,0 +1,323 @@
+.sensors-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.sensors-header h1 {
+    margin: 0;
+    font-size: 1.75rem;
+}
+
+/* Hub connection state pill */
+.hub-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.hub-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.hub-connected    { background: var(--ok-bg);   color: var(--ok-fg);   }
+.hub-reconnecting { background: var(--warn-bg);  color: var(--warn-fg); }
+.hub-disconnected { background: var(--err-bg);   color: var(--err-fg);  }
+
+.hub-connected    .hub-dot { background: var(--ok-dot);   }
+.hub-reconnecting .hub-dot { background: var(--warn-dot); }
+.hub-disconnected .hub-dot { background: var(--err-dot);  }
+
+/* Empty state */
+.sensors-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+/* Card grid */
+.sensor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.4rem;
+}
+
+/* Individual card */
+.sensor-card {
+    border: 1px solid var(--border);
+    border-left: 3px solid transparent;
+    border-radius: 0.6rem;
+    background: var(--bg-card);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.15s, transform 0.1s;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-connected    { border-left-color: var(--ok-dot);  }
+.card-disconnected { border-left-color: var(--err-dot); }
+
+.sensor-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
+}
+
+/* Card header */
+.sensor-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1.15rem 1.3rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.sensor-info {
+    min-width: 0;
+}
+
+.sensor-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+    white-space: nowrap;
+}
+
+.sensor-id-num {
+    color: var(--accent);
+}
+
+.sensor-address {
+    font-family: monospace;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Status indicator */
+.sensor-state {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    white-space: nowrap;
+}
+
+.state-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.state-connected              { color: var(--ok-fg);  }
+.state-connected  .state-dot  { background: var(--ok-dot);  }
+.state-disconnected            { color: var(--err-fg); }
+.state-disconnected .state-dot { background: var(--err-dot); }
+
+/* Card body */
+.sensor-card-body {
+    padding: 1.1rem 1.3rem;
+    flex: 1;
+}
+
+/* Measurements */
+.measurement-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 0;
+}
+
+.measurement-list .measurement-block + .measurement-block {
+    border-left: 1px solid var(--border);
+}
+
+.measurement-block {
+    text-align: center;
+    padding: 0.25rem 0.5rem;
+}
+
+.measurement-type {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+}
+
+.measurement-value {
+    font-size: 2.75rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+}
+
+.measurement-unit {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-left: 0.15rem;
+}
+
+.measurement-empty {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    padding: 0.75rem 0;
+}
+
+/* Card footer */
+.sensor-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.7rem 1.3rem;
+    border-top: 1px solid var(--border-row);
+    background: var(--bg-el);
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.sensor-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    flex: 1;
+    min-width: 0;
+}
+
+.meta-label {
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+}
+
+.meta-value {
+    font-weight: 600;
+    color: var(--text-2);
+}
+
+.sensor-time {
+    font-family: monospace;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    flex-shrink: 0;
+}
+
+/* Period display / editor */
+.period-display {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    padding: 0.1rem 0.15rem;
+    cursor: pointer;
+    line-height: 1;
+    border-radius: 0.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s, color 0.1s;
+}
+
+.btn-icon:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.btn-edit {
+    color: var(--text-dim);
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.sensor-meta:hover .btn-edit {
+    opacity: 1;
+}
+
+.btn-edit:hover {
+    color: var(--accent);
+    background: var(--badge-cpu-bg);
+}
+
+.period-editor {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    flex-wrap: wrap;
+}
+
+.period-input {
+    width: 4.5rem;
+    font-size: 0.78rem;
+    padding: 0.15rem 0.3rem;
+    border: 1px solid var(--accent);
+    border-radius: 0.25rem;
+    text-align: right;
+    outline: none;
+    color: var(--text);
+    background: var(--bg-input);
+}
+
+.period-input:focus {
+    box-shadow: 0 0 0 2px var(--input-ring);
+}
+
+.period-unit {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.btn-save {
+    color: var(--ok-dot);
+}
+
+.btn-save:hover:not(:disabled) {
+    background: var(--ok-bg);
+}
+
+.btn-cancel {
+    color: var(--text-dim);
+}
+
+.btn-cancel:hover:not(:disabled) {
+    background: var(--bg-hover);
+    color: var(--text-2);
+}
+
+.period-error {
+    font-size: 0.7rem;
+    color: var(--err-dot);
+    flex-basis: 100%;
+    text-align: right;
+    margin-top: 0.1rem;
+}

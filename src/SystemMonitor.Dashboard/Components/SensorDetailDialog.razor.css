@@ -1,0 +1,204 @@
+/* Backdrop */
+.dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fade-in 0.15s ease;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Dialog box */
+.dialog-box {
+    background: var(--bg-card);
+    border-radius: 0.6rem;
+    box-shadow: var(--shadow-lg);
+    width: 90%;
+    max-width: 560px;
+    height: 520px;
+    display: flex;
+    flex-direction: column;
+    animation: slide-up 0.15s ease;
+    outline: none;
+}
+
+@keyframes slide-up {
+    from { transform: translateY(12px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Header */
+.dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.1rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.dialog-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.dialog-address {
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: monospace;
+    color: var(--text);
+}
+
+.dialog-conn-state {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.state-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.state-connected              { color: var(--ok-fg);  }
+.state-connected  .state-dot  { background: var(--ok-dot);  }
+.state-disconnected            { color: var(--err-fg); }
+.state-disconnected .state-dot { background: var(--err-dot); }
+
+.sensor-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.badge-connected    { background: var(--ok-bg);  color: var(--ok-fg);  }
+.badge-disconnected { background: var(--err-bg); color: var(--err-fg); }
+
+.btn-close-dialog {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-dim);
+    border-radius: 0.3rem;
+    padding: 0.2rem;
+    display: flex;
+    align-items: center;
+    transition: background 0.1s, color 0.1s;
+}
+
+.btn-close-dialog:hover {
+    background: var(--bg-hover);
+    color: var(--text-2);
+}
+
+/* Meta bar */
+.dialog-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 1.1rem;
+    background: var(--bg-el);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.dialog-meta-label {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+}
+
+/* Body / table area */
+.dialog-body {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+.dialog-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Measurements table */
+.measurements-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+}
+
+.measurements-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--bg-el);
+    padding: 0.55rem 1.1rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+}
+
+.measurements-table tbody tr {
+    border-bottom: 1px solid var(--border-row);
+    transition: background 0.1s;
+}
+
+.measurements-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+.measurements-table td {
+    padding: 0.5rem 1.1rem;
+    color: var(--text-2);
+}
+
+.col-time {
+    font-family: monospace;
+    color: var(--text-dim) !important;
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+
+.col-value {
+    text-align: right;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.unit {
+    font-weight: 400;
+    color: var(--text-dim);
+    margin-left: 0.15rem;
+}
+
+.no-data {
+    color: var(--text-dim);
+    font-weight: 400;
+}
+
+/* Column header accents */
+.col-cpu-h { color: var(--badge-cpu-fg); }
+.col-mem-h { color: var(--badge-mem-fg); }

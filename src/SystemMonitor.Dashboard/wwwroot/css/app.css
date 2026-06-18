@@ -1,0 +1,309 @@
+/* ============================================================
+   CSS Custom Properties — dark (default) & light themes
+   ============================================================ */
+
+:root {
+    --bg:              #0f172a;
+    --bg-card:         #1e293b;
+    --bg-el:           #243447;
+    --bg-hover:        #243447;
+    --bg-input:        #111827;
+
+    --border:          #334155;
+    --border-row:      #253347;
+
+    --text:            #f1f5f9;
+    --text-2:          #cbd5e1;
+    --text-muted:      #94a3b8;
+    --text-dim:        #64748b;
+
+    --accent:          #3b82f6;
+    --accent-h:        #2563eb;
+    --accent-a:        #1d4ed8;
+
+    --input-ring:      rgba(59, 130, 246, 0.3);
+    --loading-overlay: rgba(15, 23, 42, 0.75);
+
+    --badge-cpu-bg:    #1d3461;
+    --badge-cpu-fg:    #93c5fd;
+    --badge-mem-bg:    #2d1b69;
+    --badge-mem-fg:    #c4b5fd;
+
+    --ok-bg:           rgba(16, 185, 129, 0.13);
+    --ok-fg:           #34d399;
+    --ok-dot:          #10b981;
+    --warn-bg:         rgba(245, 158, 11, 0.13);
+    --warn-fg:         #fbbf24;
+    --warn-dot:        #f59e0b;
+    --err-bg:          rgba(239, 68, 68, 0.13);
+    --err-fg:          #f87171;
+    --err-dot:         #ef4444;
+
+    --alert-err-bg:    rgba(220, 38, 38, 0.1);
+    --alert-err-bd:    rgba(220, 38, 38, 0.25);
+    --alert-err-txt:   #fca5a5;
+    --alert-ok-bg:     rgba(22, 163, 74, 0.1);
+    --alert-ok-bd:     rgba(22, 163, 74, 0.25);
+    --alert-ok-txt:    #86efac;
+
+    --overlay:         rgba(0, 0, 0, 0.65);
+    --shadow-lg:       0 24px 64px rgba(0, 0, 0, 0.55);
+    --shadow-sm:       0 1px 4px  rgba(0, 0, 0, 0.35);
+    --shadow-hover:    0 4px 16px rgba(0, 0, 0, 0.4);
+
+    --auth-form-bg:    #0f172a;
+}
+
+[data-theme="light"] {
+    --bg:              #f8fafc;
+    --bg-card:         #ffffff;
+    --bg-el:           #f9fafb;
+    --bg-hover:        #f9fafb;
+    --bg-input:        #ffffff;
+
+    --border:          #e5e7eb;
+    --border-row:      #f3f4f6;
+
+    --text:            #0f172a;
+    --text-2:          #374151;
+    --text-muted:      #6b7280;
+    --text-dim:        #9ca3af;
+
+    --accent:          #2563eb;
+    --accent-h:        #1d4ed8;
+    --accent-a:        #1e40af;
+
+    --input-ring:      rgba(59, 130, 246, 0.12);
+    --loading-overlay: rgba(255, 255, 255, 0.75);
+
+    --badge-cpu-bg:    #dbeafe;
+    --badge-cpu-fg:    #1e40af;
+    --badge-mem-bg:    #ede9fe;
+    --badge-mem-fg:    #5b21b6;
+
+    --ok-bg:           #d1fae5;
+    --ok-fg:           #065f46;
+    --ok-dot:          #10b981;
+    --warn-bg:         #fef3c7;
+    --warn-fg:         #92400e;
+    --warn-dot:        #f59e0b;
+    --err-bg:          #fee2e2;
+    --err-fg:          #991b1b;
+    --err-dot:         #ef4444;
+
+    --alert-err-bg:    #fef2f2;
+    --alert-err-bd:    #fecaca;
+    --alert-err-txt:   #dc2626;
+    --alert-ok-bg:     #f0fdf4;
+    --alert-ok-bd:     #bbf7d0;
+    --alert-ok-txt:    #16a34a;
+
+    --overlay:         rgba(0, 0, 0, 0.45);
+    --shadow-lg:       0 24px 64px rgba(0, 0, 0, 0.15);
+    --shadow-sm:       0 1px 4px  rgba(0, 0, 0, 0.07);
+    --shadow-hover:    0 4px 16px rgba(0, 0, 0, 0.07);
+
+    --auth-form-bg:    #f8fafc;
+}
+
+html, body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    color: var(--text);
+    background: var(--bg);
+}
+
+h1:focus {
+    outline: none;
+}
+
+a {
+    color: var(--accent);
+}
+
+/* Auth form styles */
+
+.auth-heading {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 0.3rem;
+    letter-spacing: -0.02em;
+}
+
+.auth-sub {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin: 0 0 1.75rem;
+}
+
+.auth-field {
+    margin-bottom: 1rem;
+}
+
+.auth-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-2);
+    margin-bottom: 0.35rem;
+}
+
+.auth-input {
+    display: block;
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--text);
+    background: var(--bg-input);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    box-sizing: border-box;
+}
+
+.auth-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--input-ring);
+}
+
+.auth-input.invalid {
+    border-color: var(--err-dot);
+}
+
+.auth-validation {
+    font-size: 0.78rem;
+    color: var(--err-dot);
+    margin-top: 0.25rem;
+}
+
+.auth-error {
+    background: var(--alert-err-bg);
+    border: 1px solid var(--alert-err-bd);
+    border-radius: 0.4rem;
+    color: var(--alert-err-txt);
+    font-size: 0.84rem;
+    padding: 0.6rem 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.auth-success {
+    background: var(--alert-ok-bg);
+    border: 1px solid var(--alert-ok-bd);
+    border-radius: 0.4rem;
+    color: var(--alert-ok-txt);
+    font-size: 0.84rem;
+    padding: 0.6rem 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.btn-auth {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    width: 100%;
+    padding: 0.65rem 1rem;
+    border: none;
+    border-radius: 0.4rem;
+    background: var(--accent-a);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background 0.15s;
+}
+
+.btn-auth:hover:not(:disabled) {
+    background: var(--accent-h);
+}
+
+.btn-auth:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.auth-footer {
+    margin-top: 1.25rem;
+    text-align: center;
+    font-size: 0.84rem;
+    color: var(--text-muted);
+}
+
+.auth-footer a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Blazor error UI */
+#blazor-error-ui {
+    background: #fef3c7;
+    border-top: 1px solid #fde68a;
+    bottom: 0;
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+    font-size: 0.875rem;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+.blazor-error-boundary {
+    background: #b32121;
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+    border-radius: 0.4rem;
+}
+
+.blazor-error-boundary::after {
+    content: "An error has occurred.";
+}
+
+.loading-progress {
+    position: relative;
+    display: block;
+    width: 8rem;
+    height: 8rem;
+    margin: 20vh auto 1rem auto;
+}
+
+.loading-progress circle {
+    fill: none;
+    stroke: #e0e0e0;
+    stroke-width: 0.6rem;
+    transform-origin: 50% 50%;
+    transform: rotate(-90deg);
+}
+
+.loading-progress circle:last-child {
+    stroke: #1d4ed8;
+    stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
+    transition: stroke-dasharray 0.05s ease-in-out;
+}
+
+.loading-progress-text {
+    position: absolute;
+    text-align: center;
+    font-weight: bold;
+    inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
+}
+
+.loading-progress-text:after {
+    content: var(--blazor-load-percentage-text, "Loading");
+}

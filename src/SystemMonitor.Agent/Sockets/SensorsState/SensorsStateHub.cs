@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 
 namespace SystemMonitor.Agent.Sockets.SensorsState;
 
+[Authorize]
 public sealed class SensorsStateHub(SensorsStateSocket sensorsStateSocket, ILogger<SensorsStateHub> logger) : Hub<ISensorsStateClient>
 {
     public override async Task OnConnectedAsync()

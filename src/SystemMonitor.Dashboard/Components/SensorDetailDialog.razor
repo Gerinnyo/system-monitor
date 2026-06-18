@@ -1,0 +1,169 @@
+@implements IAsyncDisposable
+@inject AuthService AuthService
+@inject SensorsHubService HubService
+
+<div class="dialog-backdrop" @onclick="OnClose">
+    <div class="dialog-box" @onclick:stopPropagation="true" @onkeydown="OnKeyDown" tabindex="-1">
+
+        <div class="dialog-header">
+            <div class="dialog-title">
+                <span class="dialog-address">@Sensor.IpAddress:@Sensor.Port</span>
+                @{
+                    var liveSensor = HubService.Sensors.FirstOrDefault(s => s.Id == Sensor.Id);
+                    var connState = liveSensor?.ConnectionState ?? _sensor?.ConnectionState ?? Sensor.ConnectionState;
+                    var isConnected = connState == "Connected";
+                }
+                <div class="dialog-conn-state @(isConnected ? "state-connected" : "state-disconnected")">
+                    <span class="state-dot"></span>
+                    <span>@connState</span>
+                </div>
+            </div>
+            <button class="btn-close-dialog" @onclick="OnClose" title="Close (Esc)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="dialog-meta">
+            <span>Period: <strong>@(Sensor.MeasurementPeriodMilliseconds / 1000.0)s</strong></span>
+            <span class="dialog-meta-label">Last 10 measurements</span>
+        </div>
+
+        <div class="dialog-body">
+            @if (_connectionError is not null)
+            {
+                <div class="dialog-loading text-danger">Connection error: @_connectionError</div>
+            }
+            else if (_sensor is null)
+            {
+                <div class="dialog-loading">
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    @_hubState…
+                </div>
+            }
+            else if (_sensor.Measurements.Count == 0)
+            {
+                <div class="dialog-loading">No measurements yet.</div>
+            }
+            else
+            {
+                var rows = _sensor.Measurements
+                    .Select((m, i) => (m, i))
+                    .GroupBy(x => x.i / 2)
+                    .Select(g =>
+                    {
+                        var items = g.Select(x => x.m).ToList();
+                        return (
+                            Time: items[0].Timestamp,
+                            Cpu: items.FirstOrDefault(m => m.MetricType == "CPU"),
+                            Mem: items.FirstOrDefault(m => m.MetricType != "CPU")
+                        );
+                    })
+                    .OrderByDescending(r => r.Time)
+                    .Take(10)
+                    .ToList();
+
+                <table class="measurements-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th class="col-value col-cpu-h">CPU</th>
+                            <th class="col-value col-mem-h">Memory</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in rows)
+                        {
+                            <tr>
+                                <td class="col-time">@row.Time.ToLocalTime().ToString("HH:mm:ss")</td>
+                                <td class="col-value">
+                                    @if (row.Cpu is not null)
+                                    {
+                                        @row.Cpu.Value.ToString("F1")
+                                        <span class="unit">@row.Cpu.Unit</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="no-data">—</span>
+                                    }
+                                </td>
+                                <td class="col-value">
+                                    @if (row.Mem is not null)
+                                    {
+                                        @row.Mem.Value.ToString("F1")
+                                        <span class="unit">@row.Mem.Unit</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="no-data">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public SensorDto Sensor { get; set; } = default!;
+    [Parameter, EditorRequired] public EventCallback OnClose { get; set; }
+
+    private HubConnection? _connection;
+    private SensorDto? _sensor;
+    private string _hubState = "Connecting";
+    private string? _connectionError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        HubService.OnChange += StateHasChanged;
+
+        _connection = new HubConnectionBuilder()
+            .WithUrl($"http://localhost:5000/sensors/{Sensor.Id}", options =>
+            {
+                options.Transports = HttpTransportType.LongPolling;
+                options.AccessTokenProvider = AuthService.GetTokenAsync;
+            })
+            .WithAutomaticReconnect()
+            .Build();
+
+        _connection.On<SensorDto>("UpdateSensorAsync", dto =>
+        {
+            _sensor = dto;
+            _hubState = "Connected";
+            StateHasChanged();
+        });
+
+        _connection.Reconnecting += _ => { _hubState = "Reconnecting"; StateHasChanged(); return Task.CompletedTask; };
+        _connection.Reconnected += _ => { _hubState = "Connected";    StateHasChanged(); return Task.CompletedTask; };
+        _connection.Closed    += _ => { _hubState = "Disconnected";  StateHasChanged(); return Task.CompletedTask; };
+
+        try
+        {
+            await _connection.StartAsync();
+            _hubState = "Connected";
+        }
+        catch (Exception ex)
+        {
+            _connectionError = ex.Message;
+            _hubState = "Disconnected";
+        }
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+            OnClose.InvokeAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        HubService.OnChange -= StateHasChanged;
+        if (_connection is not null)
+            await _connection.DisposeAsync();
+    }
+}
